@@ -1,0 +1,25 @@
+[info] job_queue.payload data_type = 'json'
+PASS: payload 列为 json（无 = 运算符的触发条件）
+[info] 旧实现 dedup 查询 -> ProgrammingError: (psycopg2.errors.UndefinedFunction) operator does not exist: json = json
+LINE 3: ...us IN ('queued', 'running') AND job_queue.payload = '{"asset...
+                                                             ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+
+[SQL: SELECT job_queue.id, job_queue.job_type, job_queue.payload, job_queue.status, job_queue.priority, job_queue.attempts, job_queue.max_attempts, job_queue.error, job_queue.locked_at, job_queue.run_after, job_queue.created_at, job_queue.updated_at 
+FROM job_queue 
+WHERE job_queue.job_type = %(job_type_1)s AND job_queue.status IN (%(status_1_1)s, %(status_1_2)s) AND job_queue.payload = %(payload_1)s::JSON]
+[parameters: {'job_type_1': 'download', 'payload_1': '{"asset_id": 1}', 'status_1_1': 'queued', 'status_1_2': 'running'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+PASS: 旧实现（ORM payload ==）在 PG 上抛 json=json
+PASS: 当前实现 enqueue 不抛错
+PASS: 相同 payload 命中去重（同一行）
+PASS: 去重后仅 1 行
+PASS: 不同 payload 正常新增
+PASS: done 任务不参与去重（可再次入队）
+PASS: 空 payload 判等在 Python 侧一致
+PASS: running 任务参与去重
+PASS: handle_download 完成（PG 上）
+[info] 下载后 understand_video jobs = [('understand_video', {'asset_id': 1})]
+PASS: 下载完成 → 自动分档在 PG 上入队 understand_video
+
+=== ALL PASS ===

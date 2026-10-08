@@ -1,0 +1,38 @@
+# ---- 第三方上游（各自是独立仓库，各有自己的 GitHub origin，只读参考）----
+/bili-sync/
+/dysync.net/
+/faster-whisper/
+/MediaCrawler/
+/wechat-article-exporter/
+/yt-dlp/
+
+# ---- 我们自己的独立仓库（单独托管：github.com/lianying1716/platform-api）----
+/platform-api/
+
+# ---- 本地/运行期产物 ----
+.codex
+.playwright-cli/
+kanban.db
+*.db
+*.sqlite*
+**/__pycache__/
+*.pyc
+**/node_modules/
+*.log
+
+# ---- 密钥/凭证（绝不入库）----
+.env
+.env.*
+!.env.example
+*secret*
+*.key
+*.pem
+credentials*
+
+# ---- macOS 挂载卷産生的 AppleDouble 垃圾 ----
+._*
+
+# ---- 编辑器/OS ----
+.DS_Store
+.idea/
+.vscode/
