@@ -31,3 +31,12 @@ python3 logo-gen/orbit_gallery.py   # 生成交付画廊 HTML
 
 探索过程的完整记录见 `platform-api/docs/brand/logo/GENERATED.md` 与
 `platform-api/docs/brand/logo/README.md`。
+
+> **探索脚本含绝对路径**：`run*.py` / `prompts*.py` / `gallery*.py` / `judge*.py` / `see.py` /
+> `scratch/` / `trace*.py` 是当时一次性运行的探索脚本，里面保留了 `/www/wwwroot/...` 绝对路径。
+> 它们只作历史留痕，**不要直接复用**；需要重跑时请自行把路径改成本机路径。
+> 真正需要长期维护的只有上面「正式交付管线」里的 `orbit_*.py`（已改为相对路径）。
+
+> **与 `platform-api/docs/brand/logo/tools/` 的关系**：那边的 `gallery.py` / `judge2.py` /
+> `prompts4.py` / `run4.py` / `see.py` 是本目录同名探索脚本的副本（为让 `platform-api` 仓库
+> 自包含品牌资产复现流程）。**改探索脚本时两处需同步**；正式管线以本目录 `orbit_*.py` 为准。

@@ -1,5 +1,11 @@
 # L3 视频理解 · 按视频类型区分的提示词体系（设计）
 
+> **⚠️ 部分已过时**：文中「L3」对应现在两档制里的 **`advanced`（多维度视频理解）**，
+> 「L1/L2/L3」三档命名已废弃（见
+> [`2026-10-06-two-tier-simplification-brief.md`](2026-10-06-two-tier-simplification-brief.md)）。
+> 「按视频类型选专属提示词」的设计**仍然有效**——当前由 `classify` + `process_settings` 实现。
+> 读本文时把 `L3` 一律理解为 `advanced`。
+
 > 日期：2026-10-05
 > 前置：`2026-10-05-video-understanding-tier-research.md`（已确认 nexai `qwen3.8-flash` 支持视频输入理解）
 > 本文只解决用户提出的第 3 点：**提示词要按视频类型区分，不能一刀切**。

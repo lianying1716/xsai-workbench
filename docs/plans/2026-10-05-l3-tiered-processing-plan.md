@@ -1,5 +1,14 @@
 # 素材加工分档（L1/L2/L3）实施计划
 
+> **⚠️ 已被取代（superseded）**：本计划提出的**三档**（l1 转录 / l2 抽帧 / l3 视频理解）
+> 后来被
+> [`2026-10-06-two-tier-simplification-brief.md`](2026-10-06-two-tier-simplification-brief.md)
+> 简化为**两档**：`""` / `basic`（转录）/ `advanced`（视频理解）——中间的「抽帧 L2」档已删除。
+>
+> **当前代码以 `media_asset.process_tier ∈ {"", "basic", "advanced"}` 为准**
+> （见 `platform-api/app/models.py`）。本文中所有 `l1/l2/l3` 取值与 `extract_frames` / ffmpeg
+> 抽帧相关任务**均已不作数**，只作历史留痕，勿据此开发。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 为素材引入分档加工：L1 转录（已有）、L2 ffmpeg 抽帧/关键帧、L3 多维度视频理解；是否升级到 L2/L3 由**动态热度门控**决定（阈值存 `system_setting`、可在线调、不写死），L3 采用「先判类型 → 再按视频类型选专属提示词 → 调 nexai 视频理解模型」的两遍式。
