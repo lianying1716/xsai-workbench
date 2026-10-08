@@ -2,6 +2,11 @@
 
 > 本文件为 xsai-workbench 统一素材平台（`platform-api/`）的用途声明与第三方代码合规记录。
 > 在抽离/改写任何第三方项目代码前必须先阅读本文件。
+>
+> **✅ 单一事实来源（canonical）**：本文件为唯一权威副本，位于工作台仓库
+> `xsai-workbench/docs/license-and-usage-compliance.md`。
+> `platform-api/docs/license-and-usage-compliance.md` 是指向本文件的门面（stub）；
+> 修改合规政策时**只改本文件**，并同步更新 stub 的摘要。
 
 ## 1. 平台用途声明（2026-06-10 经使用者确认）
 

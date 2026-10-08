@@ -6,7 +6,8 @@ import orbit_master as M
 import cairosvg
 from PIL import Image
 
-REPO = "/www/wwwroot/xsai-workbench/platform-api"
+WORKBENCH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.join(WORKBENCH, "platform-api")
 BRAND = f"{REPO}/web/public/brand/orbit"
 os.makedirs(BRAND, exist_ok=True)
 
@@ -141,5 +142,5 @@ h2 {{ margin:10px 0 4px; font-size:16px; }}
   确认配色后我就把它接进侧栏、登录页、favicon / APP 图标，并重出品牌规范页。
 </p>
 </body></html>'''
-open("/www/wwwroot/xsai-workbench/platform-api/web/public/brand/orbit-gallery.html","w",encoding="utf-8").write(html)
+open(f"{REPO}/web/public/brand/orbit-gallery.html","w",encoding="utf-8").write(html)
 print("gallery written")

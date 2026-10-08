@@ -14,7 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from shapely.geometry import Polygon
 import orbit_master as M
 
-REPO = "/www/wwwroot/xsai-workbench/platform-api"
+# logo-gen/ 与 platform-api/ 在工作台里是同级目录；用本文件位置反推，避免写死绝对路径。
+WORKBENCH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.join(WORKBENCH, "platform-api")
 MASTER_DIR = f"{REPO}/docs/brand/logo/orbit"
 WEB_DIR = f"{REPO}/web/public/brand/orbit"
 

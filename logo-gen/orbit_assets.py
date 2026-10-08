@@ -6,7 +6,8 @@ import orbit_master as M
 import cairosvg
 from PIL import Image
 
-REPO = "/www/wwwroot/xsai-workbench/platform-api"
+WORKBENCH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.join(WORKBENCH, "platform-api")
 MASTER = f"{REPO}/docs/brand/logo/orbit"
 OUT = f"{REPO}/docs/brand/logo/orbit/dist"
 WEB = f"{REPO}/web/public"

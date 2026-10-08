@@ -47,6 +47,12 @@ Each of `bili-sync`, `dysync.net`, `faster-whisper`, `MediaCrawler`, `wechat-art
 - `unified-content-platform-prd.md` / `backend-module-final-review.md` — locked architecture decisions.
 - `backend-module-architecture-*.md` — per-upstream capability/login details (read when writing adapters).
 - `license-and-usage-compliance.md` — source licenses & attribution (MediaCrawler is non-commercial, authorized).
+- `plans/` — phasing history (design + plan pairs per feature); see `plans/README.md` for the index.
+  `plans/evidence/` holds acceptance screenshots/scripts (one-off, not reusable tooling).
+
+Note: the upstream capability docs (`backend-module-architecture-*.md`) describe what each **upstream**
+project can do, not what `platform-api` currently integrates. `platform-api` currently ships **5 crawl
+platforms: bilibili / douyin / xhs / kuaishou / zhihu** (weibo + tieba were removed 2026-10-08).
 
 ### Architecture Red Lines (do not change unilaterally)
 
