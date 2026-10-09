@@ -17,12 +17,29 @@ python3 logo-gen/orbit_gallery.py   # 生成交付画廊 HTML
 
 > **不要手改产物**：`platform-api/docs/brand/` 下的 SVG/PNG 均由上述脚本生成，改标志请重跑脚本。
 
+## M3（现行）交付管线
+
+当前正式标志是 **M3「月碗托星」**（矢量母版在 `platform-api/docs/brand/logo/m3/`）。
+改标志时跑这几个：
+
+```bash
+python3 logo-gen/vectorize.py <concept.png> <out.svg> \          # 位图概念图 -> 矢量（扁平化+potrace）
+    --palette "13,25,55;243,236,221;204,40,35" [--flat 已有中间图]
+python3 logo-gen/m3_assets.py            # 从矢量母版导出 dist/ 全套位图
+python3 logo-gen/build_frontend_brand.py # 生成前端 web/public 品牌文件（favicon/侧栏/登录）
+```
+
+方法说明与踩坑见 `logo-gen/trace-lab/README.md`；标志选型与规范见
+`platform-api/docs/brand/logo/m3/README.md`、`platform-api/docs/brand/logo/GENERATED.md`。
+
 ## 目录说明
 
 | 路径 | 内容 |
 |------|------|
-| `orbit_*.py` | 「轨道」正式管线（上面三个 + `orbit_master` 几何定义 / `orbit_bake` mask 烘焙 / `orbit_sheet` 对比表） |
+| `orbit_*.py` | 「轨道」旧管线（历史，已被 M3 取代，见下） |
 | `raw/` … `raw5/` | 四轮生图探索的候选（共 24 款），存 512px 缩略图 |
+| `raw6/` … `raw12/` | 2026-10-09 各轮生图候选（`BRIEF.md` + `prompts6|…|12.py`）；**m3 是最终选型** |
+| `m3-pipeline/` | **M3 矢量化中间产物**（扁平化结果），`vectorize.py --flat` 离线复现用 |
 | `tiny/` | 三款最高分候选的 16px 可辨识度验证图 |
 | `run*.py` + `prompts*.py` | 调星算生图 API 的探索脚本（每轮一份） |
 | `judge*.py` / `see.py` | 把图发给视觉模型评审 / 描述（生图阶段本环境"看不了图"的替代方案） |

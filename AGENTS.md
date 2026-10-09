@@ -78,10 +78,18 @@ uv sync --extra postgres --extra dev          # deps (Python >= 3.11); + --extra
 uv run uvicorn app.main:app --port 9100       # backend, auto-creates tables on first start
 uv run pytest tests/ -q                        # tests
 python -m app.workers.runner                   # worker process (PG job queue consumer)
-./dev.sh [sync|serve|web]                      # local helper; `web` builds frontend into app/static
+./dev.sh [sync|serve|worker|preview|web]       # local helper (see dev/prod isolation below)
 cd web && npm install && npm run dev           # Vite dev server :5173 (proxy /api -> :9100)
-cd web && npm run build                        # build; output -> ../app/static
+cd web && npm run build                        # compile check only; output -> web/dist (NOT app/static)
+./dev.sh web                                   # RELEASE build into app/static (needs confirmation)
+./dev.sh preview                               # serve the built release locally (app/static)
 ```
+
+**Dev / release isolation (hard rule):** `platform-api` is being developed, so the
+backend does NOT host the frontend unless `PLATFORM_SERVE_FRONTEND=true` (release/Docker).
+Development uses the Vite dev server on `:5173`; the backend only serves `/api`.
+Do NOT run the release build (`./dev.sh web`, `npm run build:release`) unless the user
+explicitly confirms a release package is wanted.
 
 Dev DB convenience (local PG on 5433 to match prod shape):
 
