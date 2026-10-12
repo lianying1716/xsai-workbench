@@ -1,0 +1,65 @@
+# 平台用途声明与第三方许可证合规留痕
+
+> 本文件为 xsai-workbench 统一素材平台（`platform-api/`）的用途声明与第三方代码合规记录。
+> 在抽离/改写任何第三方项目代码前必须先阅读本文件。
+>
+> **✅ 单一事实来源（canonical）**：本文件为唯一权威副本，位于工作台仓库
+> `xsai-workbench/docs/license-and-usage-compliance.md`。
+> `platform-api/docs/license-and-usage-compliance.md` 是指向本文件的门面（stub）；
+> 修改合规政策时**只改本文件**，并同步更新 stub 的摘要。
+
+## 1. 平台用途声明（2026-06-10 经使用者确认）
+
+本平台 **仅供个人学习与研究使用**，明确：
+
+- **不用于任何商业目的**（不售卖、不提供商业服务、不接入商业产品）。
+- **不公开分发**（不开源、不对外发布二进制或镜像）。
+- 不进行大规模抓取，不从事干扰目标平台正常运营的活动。
+- 仅在使用者本人可控的单机/局域网环境内运行。
+
+该用途落在下述各第三方项目许可证允许的范围内。若未来用途变更（商用、公开、对外服务），**必须重新评估每一项第三方许可证的合规性**，本声明即失效。
+
+## 2. 第三方项目许可证与使用方式
+
+| 项目 | 许可证 | 平台如何使用 | 合规要点 |
+|---|---|---|---|
+| **MediaCrawler** | NON-COMMERCIAL LEARNING LICENSE 1.1 | 关键词抓取能力来源。一期 CLI 子进程调用；二期在本声明前提下抽离/改写核心逻辑进 `modules/` | 必须保留版权与许可声明；仅限学习研究；不得大规模抓取；不得商用。**授权范围以本声明所述自用学习为准；如需超出，须取得作者书面同意** |
+| **MediaCrawler（已移除）** | NON-COMMERCIAL LEARNING LICENSE 1.1 | **2026-10-10 起 platform-api 不再包含其实代码**：签名改用宽松许可证依赖或平台页面自身完成，快手查询文档自行定义，反检测改用 MIT 的 playwright-stealth | 无遗留副本；历史版本中曾出现的副本已不在当前主线。 |
+| **bili-sync** | MIT | B站逻辑已用 Python 重写进 `modules/bilibili.py` | 保留版权声明即可 |
+| **dysync.net** | MIT | 抖音逻辑已重写进 `modules/douyin.py` | 保留版权声明即可 |
+| **wechat-article-exporter** | MIT | 公众号逻辑已重写进 `modules/wechat_mp.py` | 保留版权声明即可；闭源依赖不带入 |
+| **faster-whisper** | MIT | 作为 PyPI 包依赖（非工作区目录） | 保留版权声明即可 |
+| **yt-dlp** | Unlicense | 作为 PyPI 包依赖 | 无限制 |
+| **xhshow**（小红书签名算法） | 见其仓库 https://github.com/Cloxl/xhshow | 小红书纯算法签名来源 | 抽离时保留致谢与来源链接 |
+
+## 3. MediaCrawler 版权声明（历史留痕）
+
+```
+NON-COMMERCIAL LEARNING LICENSE 1.1
+Copyright (c) [2024] [relakkes@gmail.com]
+```
+
+> **当前状态（2026-10-10）**：`platform-api` 已不含 MediaCrawler 的复制件或衍生实现，因此当前主线代码不再受上述非商业许可约束。本段保留用于历史留痕与开源前审计；如未来再次引入其代码，必须恢复文件头版权声明与来源标注。
+
+## 4. 抽离作业守则（PRD 5.7 + 第二阶段）
+
+1. 先定义统一接口（`modules/base.py` 的 PlatformAdapter），再迁移实现。
+2. 能通过公开 API/CLI 调用的优先封装，不急于复制代码。
+3. 每处复制/改写必须记录：来源文件、许可证、改动点、归属模块。
+4. 抖音/B站抓取的运行时签名依赖活浏览器，由 `browser_runtime` 统一承载，不在各 modules 内各自起浏览器。
+5. 本平台不带入任何原项目的不安全设计（明文凭证、_debug 导出、默认密码、任意路径/参数）。
+
+## 5. 平台图标（前端）
+
+前端 `platform-api/web/src/brand/platforms.ts` 中的平台商标几何来自 **simple-icons**（CC0-1.0 公共领域），
+仅取路径数据，未附带该库任何代码：B站 / 快手 / 知乎 / 小红书 / 微信。
+
+- **抖音**：抖音与 TikTok 共用同一音符商标几何，采用 simple-icons 的 `tiktok` 路径。
+- **未采用**：MediaCrawler 的 logo（其仓库为非商业学习许可，见第 3 节）与各平台官网 favicon（未获授权）。
+- **使用边界**：平台商标归各平台所有，本项目**仅作"这是哪个平台"的识别性使用**，
+  不得作为本项目自身标志、不得暗示官方合作或背书。若后续商业化，需自行评估各平台商标政策。
+
+## 6. 项目自有品牌资产
+
+`platform-api/docs/brand/` 下的星采 / Stargather 标志（「轨道」几何）与生成脚本为本项目原创，
+可随项目一起开源。
