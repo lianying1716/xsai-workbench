@@ -1,0 +1,75 @@
+{
+  "duration": 59.9,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": "#s1-h1",
+      "bySec": 2.6
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s6-video",
+      "bySec": 36.2
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s2-a",
+      "bySec": 6.2
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s3-name",
+      "bySec": 12.2
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s4-shot",
+      "bySec": 19.0
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s6-play",
+      "bySec": 36.4
+    },
+    {
+      "kind": "appearsBy",
+      "selector": "#s8-cta",
+      "bySec": 58.2
+    },
+    {
+      "kind": "before",
+      "a": "#s1-h1",
+      "b": "#s2-a"
+    },
+    {
+      "kind": "before",
+      "a": "#s6-play",
+      "b": "#s7-out"
+    },
+    {
+      "kind": "before",
+      "a": "#s7-out",
+      "b": "#s8-cta"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#s1-h1"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#s3-claim"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#s5-count"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#s6-c"
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": "#s8-cta"
+    }
+  ]
+}

@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>星采 Stargather · 把碎片变成资产</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansCJKsc-Regular.otf") format("opentype"); font-weight: 400; font-display: block; }
+      @font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansCJKsc-Bold.otf") format("opentype"); font-weight: 700; font-display: block; }
+      @font-face { font-family: "Smiley Sans"; src: url("assets/fonts/SmileySans-Oblique.ttf") format("truetype"); font-weight: 400; font-display: block; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight: 400; font-display: block; }
+
+      :root {
+        --cream: #FFFDF8; --cream-2: #F5F0E6; --cream-3: #ECE5D6;
+        --ink: #16151A; --ink-2: #3B393F; --muted: #6D685F;
+        --red: #C13A2C; --red-deep: #98251B; --blue: #2249C9;
+        --yellow: #EEB51B; --green: #1E7A4D;
+        --display: "Smiley Sans", "Noto Sans SC", sans-serif;
+        --body: "Noto Sans SC", sans-serif;
+        --mono: "JetBrains Mono", monospace;
+      }
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html, body { width:1920px; height:1080px; overflow:hidden; background:#0b0b0d; }
+      #root { position:relative; width:100%; height:100%; overflow:hidden; }
+      .clip { position:absolute; inset:0; }
+      .scene { container-type:size; width:100%; height:100%; overflow:hidden;
+               background:var(--cream); color:var(--ink); font-family:var(--body); }
+
+      .grid-bg { position:absolute; inset:0; z-index:1;
+        background-image:linear-gradient(var(--cream-3) .12cqw,transparent .12cqw),
+                         linear-gradient(90deg,var(--cream-3) .12cqw,transparent .12cqw);
+        background-size:4cqw 4cqw; opacity:.7; }
+      .grain { position:absolute; inset:0; z-index:60; pointer-events:none; opacity:.045;
+        background-image:repeating-conic-gradient(var(--ink) 0% 25%,transparent 0% 50%);
+        background-size:3px 3px; mix-blend-mode:multiply; }
+      .ghost { position:absolute; font-family:var(--display); color:var(--ink);
+               opacity:.06; z-index:2; line-height:0.8; white-space:nowrap; }
+      .topbar { position:absolute; top:3.3cqw; left:3.3cqw; right:3.3cqw; padding-right:190px; display:flex;
+                justify-content:space-between; align-items:center; font-family:var(--mono);
+                font-size:1.25cqw; letter-spacing:.06em; text-transform:uppercase; z-index:55; }
+      .metabar { position:absolute; bottom:3.3cqw; left:3.3cqw; right:3.3cqw; display:flex;
+                 justify-content:space-between; font-family:var(--mono); font-size:1.25cqw;
+                 letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); z-index:55; }
+      .pill { border:.2cqw solid var(--ink); border-radius:999px; padding:.35cqw 1.1cqw; }
+      .kicker { display:inline-block; background:var(--ink); color:var(--cream);
+                font-family:var(--mono); font-size:1.25cqw; letter-spacing:.14em;
+                text-transform:uppercase; padding:.5cqw 1cqw; }
+      .headline { font-family:var(--display); line-height:.94; }
+
+      /* 场景 1：收藏洪流 */
+      .folio { position:absolute; width:11.4cqw; height:8.4cqw; background:var(--cream);
+               border:.28cqw solid var(--ink); box-shadow:.66cqw .66cqw 0 var(--ink);
+               display:flex; flex-direction:column; overflow:hidden; }
+      .folio .fm { flex:1; position:relative; background:var(--cream-3); border-bottom:.26cqw solid var(--ink);
+                   overflow:hidden; }
+      .folio .fm img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+                       display:block; filter:saturate(.92) contrast(1.02); }
+      .folio .fc { height:2.05cqw; display:flex; align-items:center; padding:0 .65cqw;
+                   font-family:var(--mono); font-size:.95cqw; color:var(--ink-2); }
+      .s1-head { position:absolute; left:3.3cqw; bottom:8cqw; z-index:40; max-width:72cqw;
+                 background:var(--cream); border:.4cqw solid var(--ink);
+                 box-shadow:1.1cqw 1.1cqw 0 var(--ink); padding:1.9cqw 2.3cqw; }
+      .s1-head h1 { font-size:9.2cqw; }
+      .s1-head .red { display:block; color:var(--red); }
+
+      /* 场景 2：数字对撞 */
+      .duel { position:absolute; inset:0; z-index:20; display:flex; align-items:center;
+              justify-content:center; gap:5.5cqw; }
+      .duel-n { font-family:var(--display); font-size:21cqw; line-height:.82; }
+      .duel-n.red { color:var(--red); }
+      .duel-l { font-family:var(--mono); font-size:1.45cqw; letter-spacing:.12em;
+                text-transform:uppercase; color:var(--ink-2); margin-top:1.2cqw; }
+      .duel-rule { width:.4cqw; height:28cqw; background:var(--ink); }
+
+      /* 场景 3：品牌 */
+      .brand-wrap { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column;
+                    align-items:center; justify-content:center; gap:1.9cqw; }
+      .brand-mark { width:12cqw; height:12cqw; border:.5cqw solid var(--ink); background:var(--yellow);
+                    display:grid; place-items:center; font-family:var(--display); font-size:6.4cqw;
+                    box-shadow:1.3cqw 1.3cqw 0 var(--ink); }
+      .brand-name { font-family:var(--display); font-size:7.8cqw; }
+      .brand-en { font-family:var(--mono); font-size:1.5cqw; letter-spacing:.42em;
+                  text-transform:uppercase; color:var(--ink-2); }
+      .brand-claim { font-family:var(--body); font-size:2.4cqw; font-weight:700; margin-top:.8cqw; }
+      .wipe { position:absolute; inset:0; z-index:25; background:var(--red); transform-origin:left center; }
+
+      /* 场景 4-8：真实界面 + 交互 */
+      .frame { position:absolute; z-index:20; border:.4cqw solid var(--ink); background:#fff;
+               box-shadow:1.1cqw 1.1cqw 0 var(--ink); overflow:hidden; }
+      .frame img { display:block; width:100%; height:100%; object-fit:cover; object-position:top left; }
+      .win { position:absolute; inset:0; z-index:20; }
+      .win img { display:block; width:100%; height:100%; object-fit:cover; object-position:top left; }
+      .callout { position:absolute; z-index:45; background:var(--cream); border:.3cqw solid var(--ink);
+                 box-shadow:.65cqw .65cqw 0 var(--ink); padding:1.05cqw 1.35cqw; }
+      .callout.accent { background:var(--red); color:var(--cream); }
+      .callout .num { font-family:var(--display); font-size:4.8cqw; line-height:.92; }
+      .callout .lab { font-family:var(--mono); font-size:1.1cqw; letter-spacing:.1em;
+                      text-transform:uppercase; color:var(--ink-2); margin-top:.5cqw; }
+      .callout.accent .lab { color:var(--cream); }
+      .tag { position:absolute; z-index:45; font-family:var(--mono); font-size:1.45cqw;
+             letter-spacing:.12em; text-transform:uppercase; }
+      .cursor { position:absolute; z-index:70; width:2.1cqw; height:2.6cqw; pointer-events:none; }
+      .cursor svg { width:100%; height:100%; filter:drop-shadow(.18cqw .18cqw 0 rgba(0,0,0,.35)); }
+      .ripple { position:absolute; z-index:68; width:3cqw; height:3cqw; border:.28cqw solid var(--red);
+                border-radius:50%; opacity:0; }
+      .typebox { position:absolute; z-index:50; background:var(--cream); border:.3cqw solid var(--ink);
+                 box-shadow:.6cqw .6cqw 0 var(--ink); padding:.9cqw 1.2cqw; font-family:var(--mono);
+                 font-size:1.6cqw; display:flex; align-items:center; gap:.7cqw; }
+      .caret { width:.14cqw; height:2.1cqw; background:var(--red); }
+      .typebox b { color:var(--red); font-weight:400; }
+      .line { position:absolute; z-index:46; height:.32cqw; background:var(--red); transform-origin:left center; }
+      .stat-row { display:flex; gap:2.4cqw; align-items:baseline; }
+      .stat-row b { font-family:var(--display); font-size:5.6cqw; color:var(--red); }
+
+      /* ---------- 全程固定品牌角标（右上） ---------- */
+      .brandbug { position:absolute; inset:auto; top:44px; right:52px; z-index:95; display:flex; align-items:center;
+                  gap:12px; background:var(--cream); border:4px solid var(--ink);
+                  box-shadow:9px 9px 0 var(--ink); padding:11px 20px 11px 14px; }
+      .brandbug img { width:38px; height:38px; display:block; }
+      .brandbug .bb-name { font-family:var(--display); font-size:32px; line-height:1; }
+      .brandbug .bb-en { font-family:var(--mono); font-size:11px; letter-spacing:.24em;
+                         color:var(--muted); margin-top:4px; }
+
+      /* ---------- 平台标记：真实 logo + 中文名 ---------- */
+      .pm { display:inline-flex; align-items:center; gap:.55cqw; color:var(--ink); }
+      .pm svg { width:1.9cqw; height:1.9cqw; display:block; flex:none; }
+      .pm .pm-name { font-family:var(--body); font-weight:700; font-size:1.15cqw;
+                     white-space:nowrap; letter-spacing:0; }
+      .pm-lg svg { width:2.5cqw; height:2.5cqw; }
+      .s4-row .pm svg { width:1.9cqw; height:1.9cqw; }
+      .s4-row .pm .pm-name { font-size:1.12cqw; }
+      .pm-lg .pm-name { font-size:1.5cqw; }
+
+      /* 顶部平台条 */
+      .pchips { position:absolute; top:10.4cqw; left:3.3cqw; display:flex; gap:.8cqw; z-index:44; }
+      .pchip { display:flex; align-items:center; gap:.5cqw; background:var(--cream);
+               border:.24cqw solid var(--ink); box-shadow:.4cqw .4cqw 0 var(--ink); padding:.5cqw .85cqw; }
+      .pchip .pm svg { width:1.6cqw; height:1.6cqw; }
+      .pchip .pm .pm-name { font-size:1cqw; }
+      .s1-sub { margin-top:1.1cqw; font-size:1.7cqw; font-weight:700; color:var(--ink-2); line-height:1.45; }
+
+      /* 收藏卡片内的平台角 */
+      .folio .fp { position:absolute; top:.45cqw; left:.5cqw; display:flex; align-items:center;
+                   gap:.35cqw; background:rgba(255,253,248,.92); border:.16cqw solid var(--ink);
+                   padding:.16cqw .38cqw; }
+      .folio .fp svg { width:.9cqw; height:.9cqw; display:block; }
+      .folio .fp span { font-family:var(--mono); font-size:.62cqw; color:var(--ink); }
+
+      /* ---------- S2 时间线 + 跳动数字 ---------- */
+      .roll { font-family:var(--display); line-height:.86; font-variant-numeric:tabular-nums;
+              font-feature-settings:'tnum' 1; display:block; }
+      /* 数字容器固定尺寸：4 位 / 1 位的宽度都预留好，位数变化不推挤布局 */
+      .num-slot { display:flex; align-items:baseline; justify-content:center;
+                  height:21cqw; /* 与 .duel-n 行高一致，数字长大时不推挤标签 */ }
+      .axis { position:absolute; left:8cqw; right:8cqw; bottom:14cqw; height:.4cqw; background:var(--ink); z-index:30; }
+      .axis-fill { position:absolute; left:0; top:0; height:100%; width:0; background:var(--red); z-index:31; }
+      .tick { position:absolute; top:-.5cqw; width:.26cqw; height:1.4cqw; background:var(--ink); z-index:32; }
+      .tick-l { position:absolute; top:1.3cqw; font-family:var(--mono); font-size:.85cqw;
+                color:var(--ink-2); transform:translateX(-50%); z-index:32; white-space:nowrap; }
+      .pip { position:absolute; top:-1.05cqw; width:1.1cqw; height:1.1cqw; border-radius:50%;
+             background:var(--red); border:.2cqw solid var(--ink); z-index:33; transform:translateX(-50%) scale(0); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="59.9">
+      <!-- 全程固定品牌角标（右上角，覆盖所有场景） -->
+      <div id="brandbug" class="clip brandbug" data-start="0" data-duration="59.9" data-track-index="30">
+        <img src="assets/brand/stargather-m3.svg" alt="星采 Stargather" style="width:38px; height:38px; display:block;">
+        <div><div class="bb-name">星采</div><div class="bb-en">STARGATHER</div></div>
+      </div>
+
+      <audio id="bgm" src="assets/bgm-v3.mp3" data-start="0" data-duration="59.9" data-volume="0.62" data-fade-in="0.5" data-fade-out="1.2"></audio>
+      <audio id="sfx" src="assets/sfx-v1.mp3" data-start="0" data-duration="59.9" data-volume="0.75"></audio>
+
+      <!-- S6 真播放：真实视频片段浮在界面截图之上（主机层媒体，由主时间线驱动） -->
+      <video id="s6-video" class="clip" src="assets/clips/real-demo.mp4"
+             data-start="34.6" data-duration="4.3" data-track-index="20"
+             muted playsinline preload="auto"
+             style="position:absolute; left:386.8px; top:358.8px; width:570.3px; height:321.1px; object-fit:cover; opacity:0; z-index:40;"></video>
+
+      <!-- ============ S1 · 痛点：收藏洪流 ============ -->
+      <section id="s1" class="clip scene" data-start="0" data-duration="5.155" data-track-index="0">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="left:-4cqw; top:7cqw; font-size:21cqw;">SAVED</div>
+        <div class="flow" id="s1-flow" data-layout-ignore></div>
+        <div class="s1-head" data-layout-allow-overlap>
+          <div class="kicker" id="s1-k">00 · 你是不是也这样</div>
+          <h1 class="headline" id="s1-h1" style="margin-top:1.3cqw; font-size:6.6cqw;">收藏夹里堆了一大堆<span class="red">再也没打开过</span></h1>
+          <div class="s1-sub" id="s1-sub">抖音、B站、公众号的收藏堆成山，要追更的博主越来越多，<br>可你根本没时间看。</div>
+        </div>
+        <div class="pchips" id="s1-chips"></div>
+        <div class="topbar"><span>星采 / STARGATHER</span><span class="pill">01 · 08</span></div>
+        <div class="metabar"><span>真实演示数据</span><span>把碎片变成资产</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S2 · 存了 2847 条，用过 0 条 ============ -->
+      <section id="s2" class="clip scene" data-start="5.155" data-duration="5.131" data-track-index="1">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="right:-3cqw; bottom:-4cqw; font-size:20cqw;">0</div>
+        <div class="duel">
+          <div style="text-align:center" id="s2-a">
+            <div class="num-slot w4"><div class="duel-n roll" id="s2-n1">0</div></div>
+            <div class="duel-l">你收藏的（持续在涨）</div>
+          </div>
+          <div class="duel-rule" id="s2-rule"></div>
+          <div style="text-align:center" id="s2-b">
+            <div class="num-slot w1"><div class="duel-n red roll" id="s2-n2">0</div></div>
+            <div class="duel-l">你真正打开过的</div>
+          </div>
+        </div>
+        <!-- 时间线：收藏量持续累积，回看量几乎为零 -->
+        <div class="axis" id="s2-axis"><div class="axis-fill" id="s2-fill"></div></div>
+        <div id="s2-pips" data-layout-ignore></div>
+        <div class="tag" id="s2-tag" style="left:3.3cqw; top:11cqw;">收藏在涨，回看是 0</div>
+        <div class="metabar"><span>星采 / STARGATHER</span><span>02 · 08</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S3 · 品牌反转 ============ -->
+      <section id="s3" class="clip scene" data-start="10.286" data-duration="7.709" data-track-index="2">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="left:-3cqw; top:2cqw; font-size:19cqw;">STARGATHER</div>
+
+        <!-- 左：主 logo + 品名 + 定位 -->
+        <div id="s3-left" style="position:absolute; left:4.2cqw; top:10.3cqw; width:40cqw; z-index:30;">
+          <div id="s3-mark" role="img" aria-label="星采 Stargather"
+               style="width:10.5cqw; height:10.5cqw; border:.28cqw solid var(--ink);
+                      box-shadow:.7cqw .7cqw 0 var(--ink);
+                      background:url(assets/brand/stargather-m3.svg) center/cover no-repeat;"></div>
+          <div class="brand-name" id="s3-name" style="font-size:6.3cqw; text-align:left; margin-top:.75cqw;">星采</div>
+          <div class="brand-en" id="s3-en" style="text-align:left; letter-spacing:.3em;">STARGATHER</div>
+          <div id="s3-claim" style="margin-top:1.05cqw; font-size:1.78cqw; font-weight:700; line-height:1.4;">
+            多平台收藏自动归集、转录、AI 拆解，<br><span style="color:var(--red)">沉淀成你自己的内容知识库。</span>
+          </div>
+        </div>
+
+        <!-- 右：三件事，说清它到底帮你做什么 -->
+        <div id="s3-right" style="position:absolute; left:50cqw; top:11.6cqw; width:45.5cqw; z-index:30;
+             display:flex; flex-direction:column; gap:1cqw;">
+          <div class="s3-vp" style="background:var(--cream); border:.28cqw solid var(--ink);
+               box-shadow:.75cqw .75cqw 0 var(--ink); padding:1.15cqw 1.4cqw;">
+            <div style="font-family:var(--mono); font-size:1.05cqw; letter-spacing:.14em; color:var(--red);">01 · 一处管全部</div>
+            <div style="font-size:2.05cqw; font-weight:700; margin-top:.5cqw;">六个平台的收藏、点赞、关注，自动归集到本地</div>
+          </div>
+          <div class="s3-vp" style="background:var(--cream); border:.28cqw solid var(--ink);
+               box-shadow:.75cqw .75cqw 0 var(--ink); padding:1.15cqw 1.4cqw;">
+            <div style="font-family:var(--mono); font-size:1.05cqw; letter-spacing:.14em; color:var(--red);">02 · 自动追更</div>
+            <div style="font-size:2.05cqw; font-weight:700; margin-top:.5cqw;">你关注的博主，新作品按时自动进库</div>
+          </div>
+          <div class="s3-vp" style="background:var(--ink); border:.28cqw solid var(--ink); color:var(--cream);
+               box-shadow:.75cqw .75cqw 0 var(--red); padding:1.15cqw 1.4cqw;">
+            <div style="font-family:var(--mono); font-size:1.05cqw; letter-spacing:.14em; color:var(--yellow);">03 · 转录 + AI 拆解</div>
+            <div style="font-size:2.05cqw; font-weight:700; margin-top:.5cqw;">视频变成可搜索、可引用、能喂给模型的文本</div>
+          </div>
+        </div>
+
+        <!-- 底部：支持平台（真实 logo + 中文名） -->
+        <div id="s3-plats" style="position:absolute; left:4.2cqw; bottom:8.4cqw; width:91.6cqw; z-index:31;
+             background:var(--cream); border:.28cqw solid var(--ink); box-shadow:.75cqw .75cqw 0 var(--ink);
+             padding:1cqw 1.4cqw; display:flex; align-items:center; gap:1.5cqw;">
+          <span style="font-family:var(--mono); font-size:1.05cqw; letter-spacing:.14em; color:var(--muted);">已支持平台</span>
+          <div id="s3-platlist" style="display:flex; align-items:center; gap:1.7cqw;"></div>
+        </div>
+
+        <div class="wipe" id="s3-wipe"></div>
+        <div class="metabar"><span>星采 / STARGATHER</span><span>03 · 08</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S4 · 账号中心：扫码登录 ============ -->
+      <section id="s4" class="clip scene" data-start="17.995" data-duration="7.733" data-track-index="3">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="right:-5cqw; bottom:-6cqw; font-size:19cqw;">06</div>
+        <div class="frame" id="s4-shot" data-layout-allow-overflow style="left:4cqw; top:9cqw; width:62cqw; height:34.875cqw;">
+          <img src="assets/ui/accounts.png" alt="账号中心">
+        </div>
+        <div class="callout" id="s4-c1" style="right:4cqw; top:9cqw; width:28cqw;">
+          <div class="num">6</div><div class="lab">平台统一管理</div>
+        </div>
+        <div class="callout" id="s4-c2" style="right:4cqw; top:18.6cqw; width:28cqw;">
+          <div class="lab">扫码登录 · 凭证加密</div>
+          <div class="lab" id="s4-health" style="color:var(--green); margin-top:.55cqw;">● 掉线自动体检</div>
+        </div>
+        <!-- 右侧：6 个平台的在线指示灯（真实 logo + 中文名），逐个点亮 -->
+        <div id="s4-lights" data-layout-allow-overflow style="position:absolute; right:4cqw; top:24.8cqw; width:28cqw; z-index:45;
+             display:flex; flex-direction:column; gap:.55cqw;"></div>
+        <div class="cursor" id="s4-cur" style="right:14cqw; top:30cqw;">
+          <svg viewBox="0 0 24 30"><path d="M2 2 L2 24 L8.5 18.5 L12.5 27 L16 25 L12 16.5 L20 16 Z" fill="#fff" stroke="#16151A" stroke-width="1.6"/></svg>
+        </div>
+        <div class="ripple" id="s4-rip" style="right:13cqw; top:31cqw;"></div>
+        <div class="tag" id="s4-tag" style="left:4cqw; bottom:6cqw;">六个平台，一处管全部</div>
+        <div class="topbar"><span>星采 / STARGATHER</span><span class="pill">04 · 08</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S5 · 关键词采集：真打字 ============ -->
+      <section id="s5" class="clip scene" data-start="25.728" data-duration="7.709" data-track-index="4">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="right:-4cqw; bottom:-6cqw; font-size:18cqw;">40</div>
+        <!-- 真实页面：新建采集任务对话框（Playwright 真机截图，含真打进去的关键词） -->
+        <div class="frame" id="s5-shot" data-layout-allow-overflow style="left:4cqw; top:9cqw; width:62cqw; height:34.875cqw;">
+          <img src="assets/ui/crawl-dialog.png" alt="新建采集任务">
+        </div>
+        <div class="callout" id="s5-count" style="right:4cqw; top:12cqw; width:28cqw;">
+          <div class="lab">选平台 · 填关键词</div>
+          <div class="lab" style="color:var(--red); margin-top:.6cqw;">填好就能开始采集</div>
+        </div>
+        <div class="callout" id="s5-src" style="right:4cqw; top:23cqw; width:28cqw;">
+          <div class="lab">采集结果直接进素材库</div>
+          <div class="lab" style="margin-top:.5cqw; color:var(--ink);">达到热度门槛才抓评论</div>
+        </div>
+        <div class="ripple" id="s5-rip" style="right:14cqw; top:25cqw;"></div>
+        <div class="cursor" id="s5-cur" style="right:11cqw; top:26cqw;">
+          <svg viewBox="0 0 24 30"><path d="M2 2 L2 24 L8.5 18.5 L12.5 27 L16 25 L12 16.5 L20 16 Z" fill="#fff" stroke="#16151A" stroke-width="1.6"/></svg>
+        </div>
+        <div class="tag" id="s5-tag" style="left:4cqw; bottom:6cqw;">说一个关键词，它替你搜</div>
+        <div class="metabar"><span>真实演示数据</span><span>05 · 08 · 关键词采集</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S6 · 素材库：点开就能看 ============ -->
+      <section id="s6" class="clip scene" data-start="33.437" data-duration="5.991" data-track-index="5">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="left:-4cqw; top:1cqw; font-size:20cqw;">PLAY</div>
+        <div class="win" id="s6-list" data-layout-allow-overflow style="left:4cqw; top:9cqw; width:62cqw; height:34.875cqw; opacity:0;
+             border:.4cqw solid var(--ink); box-shadow:1.1cqw 1.1cqw 0 var(--ink); background:#fff;">
+          <img src="assets/ui/assets-videos.png" alt="素材库视频列表">
+        </div>
+        <div class="win" id="s6-play" data-layout-allow-overflow style="left:4cqw; top:9cqw; width:62cqw; height:34.875cqw;
+             border:.4cqw solid var(--ink); box-shadow:1.1cqw 1.1cqw 0 var(--ink); background:#000; opacity:0;">
+          <img src="assets/ui/assets-play.png" alt="视频播放">
+        </div>
+        <div class="cursor" id="s6-cur" style="left:30cqw; top:34cqw;">
+          <svg viewBox="0 0 24 30"><path d="M2 2 L2 24 L8.5 18.5 L12.5 27 L16 25 L12 16.5 L20 16 Z" fill="#fff" stroke="#16151A" stroke-width="1.6"/></svg>
+        </div>
+        <div class="ripple" id="s6-rip" style="left:29cqw; top:35cqw;"></div>
+        <div class="callout" id="s6-c" style="right:4cqw; top:12cqw; width:28cqw;">
+          <div class="lab">原视频落盘</div><div class="lab" style="color:var(--red); margin-top:.6cqw;">▶ 点开就能播</div>
+        </div>
+        <!-- 库里不只有视频：真实演示数据里 7 条可播视频 + 10 篇公众号文章 -->
+        <div class="callout" id="s6-types" style="right:4cqw; top:20.5cqw; width:28cqw;">
+          <div class="lab">素材库内容类型</div>
+          <div class="lab" style="margin-top:.7cqw; color:var(--ink);">■ 7 条可播视频</div>
+          <div class="lab" style="margin-top:.4cqw; color:var(--ink);">■ 10 篇公众号文章</div>
+        </div>
+        <div class="tag" id="s6-tag" style="left:4cqw; bottom:6cqw;">点开就能看，原视频不丢</div>
+        <div class="metabar"><span>真实演示数据</span><span>06 · 08 · 素材库</span></div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S7 · 转录 + 拆解：文本真的流出来 ============ -->
+      <section id="s7" class="clip scene" data-start="39.428" data-duration="12.004" data-track-index="6">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="left:-3cqw; bottom:-6cqw; font-size:18cqw;">AI</div>
+        <div class="frame" id="s7-shot" data-layout-allow-overflow style="left:3.3cqw; top:9cqw; width:44cqw; height:24.75cqw;">
+          <img src="assets/ui/transcript.png" alt="真实转录页">
+        </div>
+        <div class="frame" id="s7-pipe" data-layout-allow-overflow style="left:3.3cqw; top:36cqw; width:44cqw; height:14.6cqw;">
+          <img src="assets/ui/pipeline.png" alt="处理队列">
+        </div>
+        <div class="frame" id="s7-out" data-layout-allow-overflow style="right:3.3cqw; top:8cqw; width:46cqw; height:46.5cqw; background:#fff;">
+          <img src="assets/ui/assets-breakdown.png" alt="真实爆款拆解报告">
+        </div>
+        <div class="cursor" id="s7-cur" style="right:12cqw; top:14cqw; opacity:0;">
+          <svg viewBox="0 0 24 30"><path d="M2 2 L2 24 L8.5 18.5 L12.5 27 L16 25 L12 16.5 L20 16 Z" fill="#fff" stroke="#16151A" stroke-width="1.6"/></svg>
+        </div>
+        <div class="tag" id="s7-tag" style="left:3.3cqw; bottom:3.4cqw; background:var(--cream); padding:.4cqw .9cqw; border:.22cqw solid var(--ink);">自动转录 · AI 拆解 · 一条不落</div>
+        <div class="grain"></div>
+      </section>
+
+      <!-- ============ S8 · 数据 + CTA ============ -->
+      <section id="s8" class="clip scene" data-start="51.432" data-duration="8.468" data-track-index="7">
+        <div class="grid-bg"></div>
+        <div class="ghost" data-layout-ignore style="left:-3cqw; top:1cqw; font-size:20cqw;">ASSET</div>
+        <div class="frame" id="s8-bg" data-layout-allow-overflow style="left:6cqw; top:9cqw; width:88cqw; height:41cqw; opacity:.22;">
+          <img src="assets/ui/overview.png" alt="总览">
+        </div>
+        <div id="s8-stats" style="position:absolute; inset:0; z-index:40;">
+          <div class="callout" style="left:8cqw; top:13cqw; width:25cqw;"><div class="num">17</div><div class="lab">真实素材</div></div>
+          <div class="callout" style="left:37.5cqw; top:13cqw; width:25cqw;"><div class="num">7</div><div class="lab">可播视频</div></div>
+          <div class="callout" style="left:67cqw; top:13cqw; width:25cqw;"><div class="num">10</div><div class="lab">真实文章</div></div>
+          <div class="callout" style="left:23cqw; top:28cqw; width:54cqw;"><div class="num">100%</div><div class="lab">素材可追溯到原文</div></div>
+        </div>
+        <div id="s8-cta" style="position:absolute; left:2cqw; right:2cqw; bottom:9cqw; z-index:50; text-align:center;">
+          <div class="headline" style="font-size:5.4cqw;">你存的不是内容<span style="color:var(--red)">是待还的债</span></div>
+          <div class="headline" style="font-size:5.4cqw; margin-top:.8cqw;">星采，<span style="color:var(--red)">把它变成你的资产</span></div>
+        </div>
+        <div id="s8-url" style="position:absolute; left:0; right:0; bottom:3.9cqw; z-index:55; text-align:center;">
+          <span style="display:inline-flex; align-items:center; gap:.9cqw; background:var(--cream);
+                       border:.3cqw solid var(--ink); box-shadow:.65cqw .65cqw 0 var(--ink);
+                       padding:.6cqw 1.5cqw; font-family:var(--mono); font-size:1.75cqw; letter-spacing:.02em;">
+            <span style="color:var(--muted)">官网</span>
+            <b style="color:var(--red); font-weight:700;">cai.xsai5.xyz</b>
+          </span>
+        </div>
+        <div class="metabar"><span>星采 / STARGATHER</span><span>08 · 08</span></div>
+        <div class="grain"></div>
+      </section>
+
+    </div>
+    <script>
+      // 真实节拍网格：由 assets/beat-grid-v3.json 分析得出（真实脉冲 69.84 BPM，1 拍 = 0.859s）
+      const BPM=69.83741554, BEAT=60/BPM, BAR=4*BEAT;
+      const BEAT_T=[0.859,1.718,2.577,3.437,4.296,5.155,5.991,6.873,7.709,8.568,9.427,10.286,11.146,12.005,12.864,13.723,14.582,15.441,16.277,17.16,17.995,18.878,19.714,20.573,21.432,22.291,23.15,24.009,24.869,25.728,26.564,27.423,28.282,29.164,30.0,30.859,31.718,32.578,33.437,34.296,35.155,36.014,36.873,37.732,38.568,39.428,40.287,41.146,42.005,42.864,43.723,44.582,45.441,46.301,47.16,48.019,48.855,49.714,50.573,51.432,52.291,53.151,54.01,54.869,55.728,56.587,57.446,58.305,59.141];
+      // 把动作吸附到最近的真实重拍（确定性；不依赖运行时分析）
+      const onBeat=(t,offset=0)=>{let best=BEAT_T[0];for(const b of BEAT_T){if(Math.abs(b-t)<Math.abs(best-t))best=b;}return +(best+offset).toFixed(3);};
+      const tl=gsap.timeline({paused:true});
+      const E={ex:"expo.out",p3:"power3.out",p2:"power2.out",b:"back.out(1.7)",i:"power2.in",e2:"expo.inOut"};
+
+      /* ---- 平台真实 logo（simple-icons 几何，CC0；仅作识别性使用）---- */
+      const PLAT={
+        bilibili:{n:'B站',p:'M17.813 4.653h.854q2.266.08 3.773 1.574Q23.946 7.72 24 9.987v7.36q-.054 2.266-1.56 3.773c-1.506 1.507-2.262 1.524-3.773 1.56H5.333q-2.266-.054-3.773-1.56C.053 19.614.036 18.858 0 17.347v-7.36q.054-2.267 1.56-3.76t3.773-1.574h.774l-1.174-1.12a1.23 1.23 0 0 1-.373-.906q0-.534.373-.907l.027-.027q.4-.373.92-.373t.92.373L9.653 4.44q.107.106.187.213h4.267a.8.8 0 0 1 .16-.213l2.853-2.747q.4-.373.92-.373c.347 0 .662.151.929.4s.391.551.391.907q0 .532-.373.906zM5.333 7.24q-1.12.027-1.88.773q-.76.748-.786 1.894v7.52q.026 1.146.786 1.893t1.88.773h13.334q1.12-.026 1.88-.773t.786-1.893v-7.52q-.026-1.147-.786-1.894t-1.88-.773zM8 11.107q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q0-.56.386-.947q.387-.386.947-.386m8 0q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q.025-.586.4-.96q.373-.373.933-.373'},
+        douyin:{n:'抖音',p:'M12.525.02c1.31-.02 2.61-.01 3.91-.02c.08 1.53.63 3.09 1.75 4.17c1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97c-.57-.26-1.1-.59-1.62-.93c-.01 2.92.01 5.84-.02 8.75c-.08 1.4-.54 2.79-1.35 3.94c-1.31 1.92-3.58 3.17-5.91 3.21c-1.43.08-2.86-.31-4.08-1.03c-2.02-1.19-3.44-3.37-3.65-5.71c-.02-.5-.03-1-.01-1.49c.18-1.9 1.12-3.72 2.58-4.96c1.66-1.44 3.98-2.13 6.15-1.72c.02 1.48-.04 2.96-.04 4.44c-.99-.32-2.15-.23-3.02.37c-.63.41-1.11 1.04-1.36 1.75c-.21.51-.15 1.07-.14 1.61c.24 1.64 1.82 3.02 3.5 2.87c1.12-.01 2.19-.66 2.77-1.61c.19-.33.4-.67.41-1.06c.1-1.79.06-3.57.07-5.36c.01-4.03-.01-8.05.02-12.07'},
+        xhs:{n:'小红书',p:'M22.405 9.879c.002.016.01.02.07.019h.725a.797.797 0 0 0 .78-.972a.794.794 0 0 0-.884-.618a.795.795 0 0 0-.692.794c0 .101-.002.666.001.777m-11.509 4.808c-.203.001-1.353.004-1.685.003a2.5 2.5 0 0 1-.766-.126a.025.025 0 0 0-.03.014L7.7 16.127a.025.025 0 0 0 .01.032c.111.06.336.124.495.124c.66.01 1.32.002 1.981 0q.017 0 .023-.015l.712-1.545a.025.025 0 0 0-.024-.036zM.477 9.91c-.071 0-.076.002-.076.01l-.01.08c-.027.397-.038.495-.234 3.06c-.012.24-.034.389-.135.607c-.026.057-.033.042.003.112c.046.092.681 1.523.787 1.74c.008.015.011.02.017.02c.008 0 .033-.026.047-.044q.219-.282.371-.606c.306-.635.44-1.325.486-1.706c.014-.11.021-.22.03-.33l.204-2.616l.022-.293c.003-.029 0-.033-.03-.034zm7.203 3.757a1.4 1.4 0 0 1-.135-.607c-.004-.084-.031-.39-.235-3.06a.4.4 0 0 0-.01-.082c-.004-.011-.052-.008-.076-.008h-1.48c-.03.001-.034.005-.03.034l.021.293q.114 1.473.233 2.946c.05.4.186 1.085.487 1.706c.103.215.223.419.37.606c.015.018.037.051.048.049c.02-.003.742-1.642.804-1.765c.036-.07.03-.055.003-.112m3.861-.913h-.872a.126.126 0 0 1-.116-.178l1.178-2.625a.025.025 0 0 0-.023-.035l-1.318-.003a.148.148 0 0 1-.135-.21l.876-1.954a.025.025 0 0 0-.023-.035h-1.56q-.017 0-.024.015l-.926 2.068c-.085.169-.314.634-.399.938a.5.5 0 0 0-.02.191a.46.46 0 0 0 .23.378a1 1 0 0 0 .46.119h.59c.041 0-.688 1.482-.834 1.972a.5.5 0 0 0-.023.172a.47.47 0 0 0 .23.398c.15.092.342.12.475.12l1.66-.001q.017 0 .023-.015l.575-1.28a.025.025 0 0 0-.024-.035m-6.93-4.937H3.1a.032.032 0 0 0-.034.033c0 1.048-.01 2.795-.01 6.829c0 .288-.269.262-.28.262h-.74c-.04.001-.044.004-.04.047c.001.037.465 1.064.555 1.263c.01.02.03.033.051.033c.157.003.767.009.938-.014c.153-.02.3-.06.438-.132c.3-.156.49-.419.595-.765c.052-.172.075-.353.075-.533q.003-3.495-.007-6.991a.03.03 0 0 0-.032-.032zm11.784 6.896q-.002-.02-.024-.022h-1.465c-.048-.001-.049-.002-.05-.049v-4.66c0-.072-.005-.07.07-.07h.863c.08 0 .075.004.075-.074V8.393c0-.082.006-.076-.08-.076h-3.5c-.064 0-.075-.006-.075.073v1.445c0 .083-.006.077.08.077h.854c.075 0 .07-.004.07.07v4.624c0 .095.008.084-.085.084c-.37 0-1.11-.002-1.304 0c-.048.001-.06.03-.06.03l-.697 1.519s-.014.025-.008.036s.013.008.058.008q2.622.003 5.243.002c.03-.001.034-.006.035-.033zm4.177-3.43q0 .021-.02.024c-.346.006-.692.004-1.037.004q-.021-.003-.022-.024q-.006-.651-.01-1.303c0-.072-.006-.071.07-.07l.733-.003c.041 0 .081.002.12.015c.093.025.16.107.165.204c.006.431.002 1.153.001 1.153m2.67.244a1.95 1.95 0 0 0-.883-.222h-.18c-.04-.001-.04-.003-.042-.04V10.21q.001-.198-.025-.394a1.8 1.8 0 0 0-.153-.53a1.53 1.53 0 0 0-.677-.71a2.2 2.2 0 0 0-1-.258c-.153-.003-.567 0-.72 0c-.07 0-.068.004-.068-.065V7.76c0-.031-.01-.041-.046-.039H17.93s-.016 0-.023.007q-.008.008-.008.023v.546c-.008.036-.057.015-.082.022h-.95c-.022.002-.028.008-.03.032v1.481c0 .09-.004.082.082.082h.913c.082 0 .072.128.072.128v1.148s.003.117-.06.117h-1.482c-.068 0-.06.082-.06.082v1.445s-.01.068.064.068h1.457c.082 0 .076-.006.076.079v3.225c0 .088-.007.081.082.081h1.43c.09 0 .082.007.082-.08v-3.27c0-.029.006-.035.033-.035l2.323-.003a.7.7 0 0 1 .28.061a.46.46 0 0 1 .274.407c.008.395.003.79.003 1.185c0 .259-.107.367-.33.367h-1.218c-.023.002-.029.008-.028.033q.276.655.57 1.303a.05.05 0 0 0 .04.026c.17.005.34.002.51.003c.15-.002.517.004.666-.01a2 2 0 0 0 .408-.075c.59-.18.975-.698.976-1.313v-1.981q.001-.191-.034-.38c0 .078-.029-.641-.724-.998'},
+        kuaishou:{n:'快手',p:'M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2.32-1.888 4.2-4.218 4.2h-6.202a4.22 4.22 0 0 1-4.023-2.938l-3.676 1.833a2.04 2.04 0 0 1-2.731-.903a2 2 0 0 1-.216-.907v-5.94a2.03 2.03 0 0 1 2.035-2.024a2.04 2.04 0 0 1 .919.218l3.673 1.85a4.22 4.22 0 0 1 4.02-2.925zm-.062 2.162h-6.078c-1.153 0-2.09.921-2.108 2.065v3.247c0 1.148.925 2.081 2.073 2.1h6.113c1.153 0 2.09-.922 2.109-2.065v-3.247a2.104 2.104 0 0 0-2.074-2.1zM4.18 15.72a.554.554 0 0 0-.555.542v3.734a.556.556 0 0 0 .798.496l.01-.004l3.463-1.756V17.51l-3.467-1.73a.56.56 0 0 0-.249-.06M9.28 0a5.67 5.67 0 0 1 4.98 2.965a4.92 4.92 0 0 1 3.36-1.317c2.714 0 4.913 2.177 4.913 4.863s-2.2 4.863-4.912 4.863a4.92 4.92 0 0 1-3.996-2.034a5.65 5.65 0 0 1-4.345 2.034c-3.131 0-5.67-2.546-5.67-5.687S6.149 0 9.28 0m8.34 3.926c-1.441 0-2.61 1.157-2.61 2.585s1.169 2.585 2.61 2.585c1.443 0 2.612-1.157 2.612-2.585s-1.169-2.585-2.611-2.585zM9.28 2.287a3.395 3.395 0 0 0-3.39 3.4c0 1.877 1.518 3.4 3.39 3.4a3.395 3.395 0 0 0 3.39-3.4c0-1.878-1.518-3.4-3.39-3.4'},
+        zhihu:{n:'知乎',p:'M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078q-.408 1.096-.68 2.11h4.587c.545-.006.445 1.168.445 1.171H9.384a58 58 0 0 1-.112 3.797h2.712c.388.023.393 1.251.393 1.266H9.183a9.2 9.2 0 0 1-.408 2.102l.757-.604c.452.456 1.512 1.712 1.906 2.177c.473.681.063 2.081.063 2.081l-2.794-3.382c-.653 2.518-1.845 3.607-1.845 3.607c-.523.468-1.58.82-2.64.516c2.218-1.73 3.44-3.917 3.667-6.497H4.491c0-.015.197-1.243.806-1.266h2.71c.024-.32.086-3.254.086-3.797H6.598c-.136.406-.158.447-.268.753c-.594 1.095-1.603 1.122-1.907 1.155c.906-1.821 1.416-3.6 1.591-4.064c.425-1.124 1.671-1.125 1.671-1.125M13.078 6h6.377v11.33h-2.573l-2.184 1.373l-.401-1.373h-1.219zm1.313 1.219v8.86h.623l.263.937l1.455-.938h1.456v-8.86z'},
+        wechat_mp:{n:'公众号',p:'M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213c0 .163.13.295.29.295a.33.33 0 0 0 .167-.054l1.903-1.114a.86.86 0 0 1 .717-.098a10.2 10.2 0 0 0 2.837.403c.276 0 .543-.027.811-.05c-.857-2.578.157-4.972 1.932-6.446c1.703-1.415 3.882-1.98 5.853-1.838c-.576-3.583-4.196-6.348-8.596-6.348M5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178a1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18m5.34 2.867c-1.797-.052-3.746.512-5.28 1.786c-1.72 1.428-2.687 3.72-1.78 6.22c.942 2.453 3.666 4.229 6.884 4.229c.826 0 1.622-.12 2.361-.336a.72.72 0 0 1 .598.082l1.584.926a.3.3 0 0 0 .14.047c.134 0 .24-.111.24-.247c0-.06-.023-.12-.038-.177l-.327-1.233a.6.6 0 0 1-.023-.156a.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983a.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983a.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982'}
+      };
+      function pmHTML(k,cls,withName){
+        const m=PLAT[k]; if(!m) return '';
+        return '<span class="pm '+(cls||'')+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="'+m.p+'"/></svg>'+
+               (withName===false?'':'<span class="pm-name">'+m.n+'</span>')+'</span>';
+      }
+
+      /* ---- 场景起止（全部吸附到真实重拍）---- */
+      const T={s1:0, s2:5.155, s3:10.286, s4:17.995, s5:25.728, s6:33.437, s7:39.428, s8:51.432};
+
+      /* ---- S1：收藏洪流（24 张卡从四面涌入）---- */
+      const flow=document.getElementById('s1-flow');
+      const labels=['保存','收藏','点赞','稍后再看','收藏','保存','点赞','收藏','保存','收藏','点赞','稍后再看',
+                    '收藏','保存','点赞','收藏','保存','收藏','点赞','稍后再看','收藏','保存','点赞','收藏'];
+      // 真实封面池（48 张，来自演示库真实内容）；按固定步长取样铺开，保证相邻卡片不重复
+      const COVERS=Array.from({length:48},(_,i)=>i+1)
+        .filter(n=>n%2===1).concat(Array.from({length:48},(_,i)=>i+1).filter(n=>n%2===0));
+      const xs=[2.6,18.2,33.8,49.4,65.0,80.6], ys=[4.8,18.4,32.0,45.2];
+      let fi=0;
+      for(let r=0;r<4 && fi<24;r++){
+        for(let c=0;c<6 && fi<24;c++){
+          const d=document.createElement('div');
+          d.className='folio';
+          const jx=((r*6+c)%5-2)*.7, jy=((r*6+c)%3-1)*.8;
+          d.style.left=(xs[c]+jx)+'cqw'; d.style.top=(ys[r]+jy)+'cqw';
+          const cov=COVERS[(r*6+c)%COVERS.length];
+          d.innerHTML='<div class="fm"><img src="assets/ui/covers/'+cov+'.jpg" alt="" loading="eager"></div>'+
+                      '<div class="fc">'+labels[fi]+' · 0'+((r*6+c)%9+1)+'</div>';
+          flow.appendChild(d); fi++;
+        }
+      }
+      const folios=gsap.utils.toArray('#s1 .folio');
+      folios.forEach((el,i)=>{
+        const pk=['douyin','bilibili','xhs','wechat_mp','zhihu','kuaishou'][i%6];
+        el.insertAdjacentHTML('afterbegin', '<span class="fp"><svg viewBox="0 0 24 24"><path fill="#16151A" d="'+PLAT[pk].p+'"/></svg><span>'+PLAT[pk].n+'</span></span>');
+        const dir=i%4;
+        const from={opacity:0};
+        if(dir===0){from.x=-420;from.y=-260;from.rotation=-24;}
+        else if(dir===1){from.x=420;from.y=-260;from.rotation=24;}
+        else if(dir===2){from.x=-420;from.y=260;from.rotation=18;}
+        else {from.x=420;from.y=260;from.rotation=-18;}
+        tl.fromTo(el,from,{x:0,y:0,rotation:(i%5-2)*2.2,opacity:1,duration:.52,ease:E.b},
+                  0.08+i*0.06);
+      });
+      tl.fromTo('#s1-k',{x:-70,opacity:0},{x:0,opacity:1,duration:.34,ease:E.p3},1.718);
+      tl.fromTo('#s1-h1',{scale:1.18,opacity:0,rotation:-1.2},{scale:1,opacity:1,rotation:0,duration:.44,ease:E.ex},1.718);
+      tl.fromTo('#s1-sub',{y:26,opacity:0},{y:0,opacity:1,duration:.42,ease:E.p3},2.05);
+      tl.to(folios,{filter:'grayscale(1) opacity(.4)',duration:.5,ease:E.p2,
+                    stagger:{each:.025,from:'start'}},3.437);
+      // 顶部平台条：六个平台逐个浮入
+      const chips=document.getElementById('s1-chips');
+      ['douyin','bilibili','xhs','kuaishou','zhihu','wechat_mp'].forEach(k=>{
+        chips.insertAdjacentHTML('beforeend','<span class="pchip">'+pmHTML(k,'',true)+'</span>');
+      });
+      gsap.utils.toArray('#s1-chips .pchip').forEach((el,i)=>{
+        tl.fromTo(el,{y:-26,opacity:0,scale:.9},{y:0,opacity:1,scale:1,duration:.34,ease:E.b},2.5+i*0.12);
+      });
+
+      /* ---- S2：时间线 + 平滑累加计数器 ----
+         数字用「proxy + onUpdate」连续插值（Math.round + toLocaleString），
+         配 transform scale 从 0.55 长到 1 —— 全程连续，不是逐拍跳字。
+         时间线是「时间轴」：每拍一个刻度 + 一个落点，红色进度连续增长。 */
+      const S2B=BEAT_T.filter(b=>b>=T.s2 && b<=10.2);
+      const S2T0=S2B[0], S2T1=S2B[S2B.length-1];
+      const axis=document.getElementById('s2-axis'), pipbox=document.getElementById('s2-pips');
+      S2B.forEach((b,i)=>{
+        const frac=(i/(S2B.length-1))*100;
+        pipbox.insertAdjacentHTML('beforeend',
+          '<span class="pip" style="left:'+frac+'%"></span>');
+        axis.insertAdjacentHTML('beforeend','<span class="tick" style="left:'+frac+'%"></span>');
+        if(i%2===0) axis.insertAdjacentHTML('beforeend','<span class="tick-l" style="left:'+frac+'%">'+(i+1)+'h</span>');
+      });
+      tl.fromTo('#s2-a',{x:-700,opacity:0,scale:1.08},{x:0,opacity:1,scale:1,duration:.5,ease:E.ex},T.s2);
+      tl.fromTo('#s2-b',{x:700,opacity:0,scale:1.08},{x:0,opacity:1,scale:1,duration:.5,ease:E.ex},T.s2);
+      tl.fromTo('#s2-rule',{scaleY:0,transformOrigin:'top center'},{scaleY:1,duration:.4,ease:E.p3},T.s2+0.2);
+      tl.fromTo('#s2-tag',{y:-30,opacity:0},{y:0,opacity:1,duration:.4,ease:E.p3},6.873);
+      tl.fromTo(axis,{opacity:0},{opacity:1,duration:.3,ease:E.p2},T.s2+0.1);
+
+      // 时间线落点：逐拍落下（这是「事件的节奏」，保留在重拍上）
+      gsap.utils.toArray('#s2-pips .pip').forEach((el,i)=>{
+        tl.fromTo(el,{scale:0,opacity:0},{scale:1,opacity:1,duration:.2,ease:E.b,immediateRender:false},S2B[i]);
+      });
+      // 进度条连续增长（不是一段段跳）
+      tl.fromTo('#s2-fill',{width:'0%'},{width:'100%',duration:+(S2T1-S2T0).toFixed(3),ease:'none',immediateRender:false},S2T0);
+
+      // 先把槽宽按「最终最宽的字符串」量好，位数从 1→4 变化时数字不会被推挤/压到标签
+      (function sizeSlots(){
+        const probe=document.createElement('div');
+        probe.style.cssText='position:absolute; visibility:hidden; white-space:nowrap;'
+          +'font-family:var(--display); font-size:21cqw; line-height:.82;';
+        document.getElementById('s2').appendChild(probe);
+        const w=document.getElementById('s2-n1').parentElement;
+        probe.textContent='2,847'; w.style.minWidth=probe.offsetWidth+'px';
+        const w2=document.getElementById('s2-n2').parentElement;
+        probe.textContent='3'; w2.style.minWidth=probe.offsetWidth+'px';
+        probe.remove();
+      })();
+      // 收藏数：0 → 2847，持续累加，power2.out（先快后缓，像在不断累积）
+      const c1={v:0}, c2={v:0};
+      tl.to(c1,{v:2847,duration:+(S2T1-S2T0).toFixed(3),ease:'power2.out',
+        onUpdate:()=>{document.getElementById('s2-n1').textContent=Math.round(c1.v).toLocaleString();}},S2T0);
+      // 「打开过的」也连续累加：0 → 3（数量级对比靠数字本身，不靠跳）
+      tl.to(c2,{v:3,duration:+(S2T1-S2T0).toFixed(3),ease:'none',
+        onUpdate:()=>{document.getElementById('s2-n2').textContent=Math.round(c2.v).toLocaleString();}},S2T0);
+      // 数字自身的长大：0.55 → 1，与计数同一段时间、同一种收束感
+      tl.fromTo('#s2-n1',{scale:.55},{scale:1,duration:+(S2T1-S2T0).toFixed(3),ease:'power2.out',immediateRender:false},S2T0);
+      tl.fromTo('#s2-n2',{scale:.6},{scale:1,duration:+(S2T1-S2T0).toFixed(3),ease:'power2.out',immediateRender:false},S2T0);
+      // 落定后一个小回弹（只在结束时一次，不打断读数）
+      tl.fromTo('#s2-n1',{scale:1},{scale:1.035,duration:.11,ease:'power2.out',immediateRender:false},S2T1+.02);
+      tl.to('#s2-n1',{scale:1,duration:.16,ease:'power2.inOut'},S2T1+.13);
+      tl.set('#s2-n1',{textContent:'2,847'},S2T1+.02);
+      tl.set('#s2-n2',{textContent:'3'},S2T1+.02);
+
+      /* ---- S3：品牌反转（主 logo + 定位 + 三件事 + 支持平台）---- */
+      tl.fromTo('#s3-wipe',{scaleX:1},{scaleX:0,duration:.55,ease:E.e2},T.s3);
+      tl.fromTo('#s3-mark',{y:90,opacity:0,scale:.45},{y:0,opacity:1,scale:1,duration:.5,ease:E.b},10.6);
+      tl.fromTo('#s3-name',{x:-50,opacity:0},{x:0,opacity:1,duration:.44,ease:E.ex},11.09);
+      tl.fromTo('#s3-en',{opacity:0,y:16},{opacity:1,y:0,duration:.4,ease:E.p3},11.26);
+      tl.fromTo('#s3-claim',{y:34,opacity:0},{y:0,opacity:1,duration:.5,ease:E.p3},11.52);
+      gsap.utils.toArray('#s3-right .s3-vp').forEach((el,i)=>{
+        tl.fromTo(el,{x:90,opacity:0},{x:0,opacity:1,duration:.46,ease:E.ex},11.15+i*0.5);
+      });
+      // 支持平台条：真实 logo + 中文名，逐个落位
+      const platlist=document.getElementById('s3-platlist');
+      ['bilibili','douyin','xhs','kuaishou','zhihu','wechat_mp'].forEach(k=>{
+        platlist.insertAdjacentHTML('beforeend', pmHTML(k,'pm-lg',true));
+      });
+      tl.fromTo('#s3-plats',{y:44,opacity:0},{y:0,opacity:1,duration:.45,ease:E.p3},12.6);
+      gsap.utils.toArray('#s3-platlist .pm').forEach((el,i)=>{
+        tl.fromTo(el,{y:22,opacity:0,scale:.86},{y:0,opacity:1,scale:1,duration:.34,ease:E.b},12.9+i*0.24);
+      });
+
+      /* ---- S4：账号中心 + 点击 ---- */
+      tl.fromTo('#s4-shot',{y:130,opacity:0,scale:.94},{y:0,opacity:1,scale:1,duration:.6,ease:E.ex},T.s4);
+      // 镜头推近：账号中心放大到 1.3，聚焦账号列表
+      tl.fromTo('#s4-shot img',{scale:1},{scale:1.3,transformOrigin:'30% 30%',duration:1.1,ease:E.e2,immediateRender:false},18.9);
+      tl.fromTo('#s4-shot',{scale:1},{scale:1.07,x:-22,y:-12,duration:2.2,ease:E.e2,immediateRender:false},21.432);
+      tl.fromTo('#s4-c1',{y:-60,opacity:0},{y:0,opacity:1,duration:.4,ease:E.b},18.878);
+      tl.fromTo('#s4-c2',{x:70,opacity:0},{x:0,opacity:1,duration:.42,ease:E.p3},19.714);
+      tl.fromTo('#s4-cur',{x:120,y:-40,opacity:0,scale:.9},{x:0,y:0,opacity:1,scale:1,duration:.5,ease:E.p3},19.714);
+      tl.fromTo('#s4-cur',{scale:1},{scale:.86,duration:.1,ease:E.i,immediateRender:false},20.573);
+      tl.fromTo('#s4-rip',{scale:.2,opacity:.9},{scale:2.6,opacity:0,duration:.55,ease:E.p2},20.573);
+      tl.fromTo('#s4-cur',{scale:.86},{scale:1,duration:.16,ease:E.b,immediateRender:false},20.69);
+      tl.fromTo('#s4-tag',{y:40,opacity:0},{y:0,opacity:1,duration:.42,ease:E.p3},21.432);
+      // 5 个平台在线指示灯逐个点亮（点击之后「一处管全部」）
+      // 6 个平台逐行落位：真实 logo + 中文名 + 在线灯逐一点亮
+      const lights=document.getElementById('s4-lights');
+      [['bilibili','B站'],['douyin','抖音'],['xhs','小红书'],['kuaishou','快手'],['zhihu','知乎'],['wechat_mp','公众号']].forEach(([k])=>{
+        lights.insertAdjacentHTML('beforeend',
+          '<div class="s4-row" style="display:flex; justify-content:space-between; align-items:center; background:var(--cream);'+
+          ' border:.22cqw solid var(--ink); box-shadow:.26cqw .26cqw 0 var(--ink); padding:.2cqw .75cqw;">'+
+          pmHTML(k,'pm-lg',true)+
+          '<span class="dot" style="width:.9cqw; height:.9cqw; border-radius:50%; background:var(--cream-3);'+
+          ' border:.18cqw solid var(--ink); flex:none;"></span></div>');
+      });
+      tl.fromTo('#s4-lights',{y:34,opacity:0},{y:0,opacity:1,duration:.45,ease:E.p3},20.573);
+      gsap.utils.toArray('#s4-lights .s4-row').forEach((el,i)=>{
+        tl.fromTo(el,{x:70,opacity:0,scale:.94},{x:0,opacity:1,scale:1,duration:.32,ease:E.b,immediateRender:false},20.62+i*0.3);
+      });
+      gsap.utils.toArray('#s4-lights .dot').forEach((el,i)=>{
+        tl.fromTo(el,{backgroundColor:'#ECE5D6',scale:.7},
+                  {backgroundColor:'#1E7A4D',scale:1,duration:.26,ease:E.b,immediateRender:false},21.0+i*0.3);
+      });
+      tl.to('#s4-health',{opacity:1,duration:.3,ease:E.p2},22.8);
+      // S4 收束：二次推近 + 在线灯脉冲（补掉 23.2-25.6s 的静止）
+      tl.fromTo('#s4-shot img',{scale:1.3,transformOrigin:'30% 30%'},
+                {scale:1.44,transformOrigin:'35% 40%',duration:2.6,ease:'sine.inOut',immediateRender:false},23.0);
+      tl.fromTo('#s4-tag',{scale:1},{scale:1.05,duration:1.1,ease:'sine.inOut',immediateRender:false},23.4);
+      tl.to('#s4-tag',{scale:1,duration:1.1,ease:'sine.inOut'},24.5);
+      tl.to('#s4-health',{scale:1.09,duration:.24,repeat:3,yoyo:true,ease:'sine.inOut'},23.6);
+      gsap.utils.toArray('#s4-lights .dot').forEach((el,i)=>{
+        tl.to(el,{scale:1.34,repeat:3,yoyo:true,duration:.22,ease:'sine.inOut'},23.9+i*0.32);
+      });
+      gsap.utils.toArray('#s4-lights .s4-row').forEach((el,i)=>{
+        tl.fromTo(el,{x:0},{x:i%2?7:-7,duration:1.2,ease:'sine.inOut',immediateRender:false},23.7+i*0.2);
+      });
+
+      /* ---- S5：真实「新建采集任务」对话框 ---- */
+      tl.fromTo('#s5-shot',{x:-120,opacity:0,scale:.95},{x:0,opacity:1,scale:1,duration:.55,ease:E.ex},T.s5);
+      // 推近到对话框表单（放大到 1.34，聚焦关键词输入行）
+      tl.fromTo('#s5-shot img',{scale:1},{scale:1.34,transformOrigin:'46% 42%',duration:1.15,ease:E.e2,immediateRender:false},26.4);
+      tl.fromTo('#s5-cur',{x:150,y:-60,opacity:0},{x:0,y:0,opacity:1,duration:.5,ease:E.p3},26.564);
+      // 光标落到关键词输入框 → 点击涟漪（提示「这里可以填」）
+      tl.fromTo('#s5-cur',{scale:1},{scale:.86,duration:.1,ease:E.i,immediateRender:false},27.423);
+      tl.fromTo('#s5-rip',{scale:.2,opacity:.9},{scale:2.3,opacity:0,duration:.5,ease:E.p2},27.423);
+      tl.fromTo('#s5-cur',{scale:.86},{scale:1,duration:.16,ease:E.b,immediateRender:false},27.54);
+      tl.fromTo('#s5-count',{x:70,opacity:0},{x:0,opacity:1,duration:.42,ease:E.p3},28.282);
+      tl.fromTo('#s5-src',{x:70,opacity:0},{x:0,opacity:1,duration:.42,ease:E.p3},29.164);
+      tl.fromTo('#s5-tag',{y:40,opacity:0},{y:0,opacity:1,duration:.42,ease:E.p3},29.5);
+
+      /* ---- S6：点开视频，真的播 ---- */
+      tl.fromTo('#s6-list',{scale:.96,opacity:0},{scale:1,opacity:1,duration:.5,ease:E.ex},T.s6);
+      tl.fromTo('#s6-list img',{scale:1},{scale:1.3,duration:1.1,ease:E.e2,immediateRender:false},34.0);
+      tl.fromTo('#s6-cur',{x:-140,y:-90,opacity:0},{x:0,y:0,opacity:1,duration:.5,ease:E.p3},34.296);
+      tl.fromTo('#s6-cur',{scale:1},{scale:.86,duration:.1,ease:E.i,immediateRender:false},35.155);
+      tl.fromTo('#s6-rip',{scale:.2,opacity:.9},{scale:2.4,opacity:0,duration:.5,ease:E.p2},35.155);
+      tl.to('#s6-play',{opacity:1,duration:.35,ease:E.p2},35.155);
+      tl.to('#s6-list',{opacity:0,duration:.35,ease:E.p2},35.155);
+      tl.fromTo('#s6-play',{scale:1.04},{scale:1,duration:.6,ease:E.ex},35.155);
+      tl.fromTo('#s6-video',{opacity:0,scale:1.05},{opacity:1,scale:1,duration:.5,ease:E.ex},35.3);
+      tl.to('#s6-video',{opacity:0,duration:.35,ease:E.p2},38.55);
+      tl.fromTo('#s6-c',{x:70,opacity:0},{x:0,opacity:1,duration:.42,ease:E.p3},35.9);
+      tl.fromTo('#s6-types',{x:70,opacity:0},{x:0,opacity:1,duration:.42,ease:E.p3},36.4);
+      tl.fromTo('#s6-tag',{y:36,opacity:0},{y:0,opacity:1,duration:.42,ease:E.p3},35.9);
+
+      /* ---- S7：真实「转录」页 + 真实「爆款拆解」报告 ---- */
+      tl.fromTo('#s7-shot',{x:-110,opacity:0},{x:0,opacity:1,duration:.55,ease:E.ex},T.s7);
+      tl.fromTo('#s7-pipe',{y:60,opacity:0},{y:0,opacity:1,duration:.5,ease:E.p3},40.287);
+      // 真转录页：从顶部往下「读」一遍正文（缓慢下移，像在滚读转录结果）
+      tl.fromTo('#s7-shot img',{scale:1.26,objectPosition:'50% 4%'},
+                {scale:1.26,objectPosition:'50% 74%',duration:6.4,ease:'sine.inOut',immediateRender:false},40.6);
+      // 真实爆款拆解报告：推入 + 缓慢下移看完整报告
+      tl.fromTo('#s7-out',{x:130,opacity:0},{x:0,opacity:1,duration:.6,ease:E.ex},40.287);
+      tl.fromTo('#s7-out img',{scale:1.2,objectPosition:'50% 0%'},
+                {scale:1.2,objectPosition:'50% 100%',duration:7.2,ease:'sine.inOut',immediateRender:false},41.4);
+      tl.fromTo('#s7-tag',{y:36,opacity:0},{y:0,opacity:1,duration:.42,ease:E.p3},40.6);
+
+      /* ---- S8：数据 + CTA ---- */
+      tl.fromTo('#s8-bg',{scale:1.06,opacity:0},{scale:1,opacity:.22,duration:.6,ease:E.ex},T.s8);
+      gsap.utils.toArray('#s8-stats .callout').forEach((el,i)=>{
+        tl.fromTo(el,{y:-70,opacity:0,rotation:(i%2?2.5:-2.5)},{y:0,opacity:1,rotation:0,duration:.42,ease:E.b},51.55+i*0.46);
+      });
+      tl.to('#s8-stats',{opacity:0,y:-40,duration:.45,ease:E.p2},55.728);
+      tl.fromTo('#s8-cta',{y:80,opacity:0,scale:.94},{y:0,opacity:1,scale:1,duration:.55,ease:E.ex},56.587);
+      // 落地页地址：在主张之后落定，并保持到片尾
+      tl.fromTo('#s8-url',{y:42,opacity:0,scale:.9},{y:0,opacity:1,scale:1,duration:.5,ease:E.b},57.9);
+      tl.fromTo('#s8-cta',{},{keyframes:[{scale:1.05,duration:.05},{scale:1,duration:.06}],immediateRender:false},58.305);
+
+      /* ---- 全片「摄影机」层：整机位运动 + 环境律动 ----
+         对标数据（teardown_video.py 六维拆解）：
+           参考片全局运动(运镜) 0.037–0.992；我们此前仅 0.007 —— 整机位几乎不动，
+           这是「动效差点意思」的主因（不是元素效果不够，是画面本身没有运镜）。
+         这里给每个场景一条整机位运动（推/拉/摇），并保留网格漂移 + 幽灵字视差 + 元素呼吸，
+         形成 3 层同时运动，把「运动覆盖率」从 0.072 提到参考片区间。
+         所有机位运动 scale≥1，保证画面永不露底；起点/终点都对齐真实重拍。 */
+      const SC={s1:[0,5.155],s2:[5.155,10.286],s3:[10.286,17.995],s4:[17.995,25.728],
+                s5:[25.728,33.437],s6:[33.437,39.428],s7:[39.428,51.432],s8:[51.432,59.9]};
+      // 每场的机位语言：pain 段躁动推进 / 反转段拉开 / 演示段跟随 / 收尾拉远
+      // 画幅出血规则：平移量必须小于 scale 留出的边距，否则会露出底色。
+      //   scale 1.04 → 左右各 38px、上下各 22px 余量；1.08 → 左右 77px、上下 43px。
+      const CAM={
+        s1:{from:{scale:1.05,x:-30,y:16},  to:{scale:1.08,x:32,y:-14},  ease:'none'},        // 焦躁推进
+        s2:{from:{scale:1.08,x:26,y:-14},  to:{scale:1.05,x:-20,y:12},  ease:'sine.inOut'},  // 收束落定
+        s3:{from:{scale:1.09,x:0,y:-12,rotation:-.5}, to:{scale:1.05,x:0,y:8,rotation:0}, ease:'expo.out'}, // 拉开揭晓
+        s4:{from:{scale:1.05,x:30,y:-14},  to:{scale:1.09,x:-26,y:14},  ease:'sine.inOut'},  // 跟随界面
+        s5:{from:{scale:1.04,x:-28,y:16},  to:{scale:1.08,x:26,y:-14},  ease:'sine.inOut'},  // 推进表单
+        s6:{from:{scale:1.08,x:28,y:-14},  to:{scale:1.04,x:-24,y:14},  ease:'sine.inOut'},  // 拉开看播放
+        s7:{from:{scale:1.04,x:-24,y:14},  to:{scale:1.08,x:26,y:-12},  ease:'sine.inOut'},  // 缓推读报告
+        s8:{from:{scale:1.09,x:0,y:-14},   to:{scale:1.04,x:0,y:0},     ease:'sine.inOut'}   // 拉远收尾
+      };
+      // 机位只作用于「画面内容」；贴边的标注层（HUD）保持不动 ——
+      // 否则整机位会把边缘文字推出画布（硬否决项：文字被裁切）。
+      // 这也是常规做法：标注/角标属于 UI 层，不继承摄影机变换。
+      const CHROME=['topbar','metabar','brandbug','callout','tag','typebox',
+                    's8-stats','s8-cta','s8-url','s3-plats','s4-lights','pchips'];
+      const camLayers={};
+      Object.keys(SC).forEach(id=>{
+        const sec=document.getElementById(id);
+        const layer=document.createElement('div');
+        layer.className='cam-layer';
+        layer.style.cssText='position:absolute; inset:0;';
+        [...sec.children].forEach(el=>{
+          const isChrome = CHROME.some(c=>el.classList.contains(c) || el.id===c);
+          if(!isChrome) layer.appendChild(el);
+        });
+        sec.insertBefore(layer, sec.firstChild);   // 放在最底层，HUD 天然在上
+        camLayers[id]=layer;
+      });
+      Object.entries(SC).forEach(([id,[a,b]])=>{
+        const dur=+(b-a).toFixed(3);
+        const cam=CAM[id];
+        // 1) 整机位（视觉层）—— 决定「全局运动」这一维
+        tl.fromTo(camLayers[id],{scale:cam.from.scale,x:cam.from.x,y:cam.from.y,
+                          rotation:cam.from.rotation||0},
+                  {scale:cam.to.scale,x:cam.to.x,y:cam.to.y,rotation:cam.to.rotation||0,
+                   duration:dur,ease:cam.ease,immediateRender:false,transformOrigin:'50% 50%'},a);
+        // 2) 网格缓慢漂移：全屏的「呼吸」，与机位反向，制造视差
+        tl.fromTo('#'+id+' .grid-bg',{backgroundPosition:'0px 0px'},
+                  {backgroundPosition:'76.8px 76.8px',duration:dur,ease:'none',immediateRender:false},a);
+        // 3) 巨型幽灵字做反向视差：画面始终有第二层在动
+        tl.fromTo('#'+id+' .ghost',{xPercent:0,yPercent:0},
+                  {xPercent:1.6,yPercent:-1.1,duration:dur,ease:'none',immediateRender:false},a);
+        // 4) 元素呼吸层（与父层机位叠加，形成景深）
+        const hero = {s1:'#s1-flow',s2:'#s2 .duel',s3:'#s3-left',s4:'#s4-shot',
+                      s5:'#s5-shot',s6:'#s6-list',s7:'#s7-out',s8:'#s8-bg'}[id];
+        if(hero && id!=='s4'){   // s4 已有独立二次推近，避免叠加过量
+          tl.fromTo(hero,{scale:1},{scale:1.03,duration:+(dur/2).toFixed(3),ease:'sine.inOut',immediateRender:false},a);
+          tl.to(hero,{scale:1,duration:+(dur/2).toFixed(3),ease:'sine.inOut'},+(a+dur/2).toFixed(3));
+        }
+      });
+
+      window.__timelines['main']=tl;
+    </script>
+  </body>
+</html>

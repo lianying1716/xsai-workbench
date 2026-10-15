@@ -1,0 +1,16 @@
+# 生成的媒体与临时产物不入库（AGENTS.md：不提交生成的媒体、日志）
+videos/*/renders/
+videos/*/snapshots*/
+videos/*/verify/
+videos/*/capture*/
+videos/*/.hyperframes/
+videos/*/node_modules/
+# 逐帧接触表 / 审阅静帧（生成产物，可由合成源重跑；storyboard.html 保留）
+videos/*/snap-v*/
+videos/*/g2*/*.png
+# 第三方参考片与其多模态分析产物（体量大、非本方产出）
+reference/
+# 授权字体（体积大、随环境获取；合成源码里按名引用）
+videos/*/assets/fonts/
+.DS_Store
+._*

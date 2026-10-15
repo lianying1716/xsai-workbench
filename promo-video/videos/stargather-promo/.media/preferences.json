@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "preferences": {
+    "destination": {
+      "value": "bilibili",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.492Z"
+    },
+    "aspect": {
+      "value": "1920x1080",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.525Z"
+    },
+    "language": {
+      "value": "zh",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.561Z"
+    },
+    "flow": {
+      "value": "automation",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.596Z"
+    },
+    "storyboard": {
+      "value": "yes",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.630Z"
+    },
+    "style_preset.product-launch-video": {
+      "value": "creative-mode",
+      "confirmed_in": [
+        "stargather-promo"
+      ],
+      "updated_at": "2026-10-11T16:53:39.665Z"
+    }
+  },
+  "sightings": {}
+}

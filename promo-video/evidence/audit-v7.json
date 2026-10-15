@@ -1,0 +1,226 @@
+{
+  "video": "renders/stargather-promo-v7.mp4",
+  "spec": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30.0,
+    "duration": 59.9,
+    "size_mb": 59.3,
+    "vcodec": "h264",
+    "acodec": "aac",
+    "sample_rate": 48000,
+    "channels": 2,
+    "res_ok": true,
+    "dur_ok": true,
+    "pass": true
+  },
+  "motion": {
+    "frames": 599,
+    "active_frame_ratio": 0.774,
+    "mean_block_diff": 3.86,
+    "mean_frame_diff": 3.859,
+    "low_motion_segments_ge_1s": [
+      {
+        "t": 53.4,
+        "dur": 2.3
+      },
+      {
+        "t": 58.5,
+        "dur": 1.4
+      }
+    ],
+    "frozen_segments_ge_1s": [],
+    "frozen_frame_ratio": 0.005,
+    "blank_frames": 0,
+    "black_frames": 0,
+    "static_threshold": 0.15
+  },
+  "audio": {
+    "head_rms": 0.1476,
+    "overall_rms": 0.1543,
+    "head_over_overall": 0.956,
+    "peak": 0.7934,
+    "clipped_ratio": 0.0,
+    "per_sec_rms": [
+      0.1229,
+      0.1599,
+      0.1571,
+      0.1402,
+      0.1871,
+      0.1355,
+      0.1506,
+      0.1463,
+      0.1654,
+      0.1668,
+      0.1522,
+      0.1823,
+      0.1329,
+      0.1632,
+      0.1471,
+      0.1696,
+      0.1487,
+      0.1573,
+      0.1723,
+      0.1417,
+      0.1627,
+      0.1708,
+      0.1419,
+      0.145,
+      0.1526,
+      0.1624,
+      0.1515,
+      0.1484,
+      0.187,
+      0.1377,
+      0.1572,
+      0.1483,
+      0.1606,
+      0.1615,
+      0.1477,
+      0.1845,
+      0.1288,
+      0.1577,
+      0.1423,
+      0.1678,
+      0.1533,
+      0.1631,
+      0.1788,
+      0.157,
+      0.1648,
+      0.1932,
+      0.1555,
+      0.1496,
+      0.1698,
+      0.1732,
+      0.1736,
+      0.1496,
+      0.1925,
+      0.1395,
+      0.1398,
+      0.0886,
+      0.1057,
+      0.1087,
+      0.1172
+    ]
+  },
+  "beats": {
+    "n_downbeats": 17,
+    "checked": 17,
+    "mean_abs_offset_s": 0.0041,
+    "max_abs_offset_s": 0.0232,
+    "bgm": "assets/bgm-v3.mp3",
+    "tempo_declared": 69.83742
+  },
+  "scale": [
+    {
+      "window": [
+        26.0,
+        27.7
+      ],
+      "box": [
+        38,
+        86,
+        596,
+        335
+      ],
+      "best_scale": 1.0,
+      "best_ncc": 0.979,
+      "median_scale": 1.18,
+      "max_scale": 1.36,
+      "median_ncc": 0.962,
+      "samples": [
+        {
+          "t": 26.4,
+          "scale": 1.0,
+          "ncc": 0.979
+        },
+        {
+          "t": 26.8,
+          "scale": 1.04,
+          "ncc": 0.963
+        },
+        {
+          "t": 27.2,
+          "scale": 1.32,
+          "ncc": 0.961
+        },
+        {
+          "t": 27.6,
+          "scale": 1.36,
+          "ncc": 0.954
+        }
+      ]
+    },
+    {
+      "window": [
+        18.0,
+        19.6
+      ],
+      "box": [
+        38,
+        86,
+        596,
+        335
+      ],
+      "best_scale": 1.18,
+      "best_ncc": 0.859,
+      "median_scale": 1.18,
+      "max_scale": 1.3,
+      "median_ncc": 0.857,
+      "samples": [
+        {
+          "t": 18.4,
+          "scale": 1.18,
+          "ncc": 0.859
+        },
+        {
+          "t": 18.8,
+          "scale": 1.18,
+          "ncc": 0.859
+        },
+        {
+          "t": 19.2,
+          "scale": 1.18,
+          "ncc": 0.853
+        },
+        {
+          "t": 19.6,
+          "scale": 1.3,
+          "ncc": 0.855
+        }
+      ]
+    }
+  ],
+  "playback": {
+    "window": [
+      35.5,
+      38.5
+    ],
+    "play_hot_ratio": 0.438,
+    "static_hot_ratio": 0.0,
+    "pass": true
+  },
+  "countup": {
+    "window": [
+      6.4,
+      9.6
+    ],
+    "frames": 32,
+    "frozen_frames": 0,
+    "mean_diff": 38.578,
+    "max_diff": 80.648,
+    "pass": true
+  },
+  "verdict": {
+    "active_ratio_ok": true,
+    "no_frozen_ge_1s": true,
+    "no_blank": true,
+    "no_black": true,
+    "head_energy_ok": true,
+    "no_clipping": true,
+    "spec_ok": true,
+    "countup_continuous": true,
+    "real_video_playing": true
+  },
+  "pass": true
+}

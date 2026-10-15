@@ -36,3 +36,8 @@ credentials*
 .DS_Store
 .idea/
 .vscode/
+
+# ---- 生成物 / 一次性截图证据（体量大，不入库）----
+logo-gen/shots/
+# 与仓库无关的杂图（聊天/截图随手保存）
+微信图片_*.jpg
