@@ -37,8 +37,12 @@
 
 ## 宣传片
 
-星采宣传片 v9（1080p / 60s）就在产品仓库的首页里：见
-[platform-api → 宣传片](https://github.com/lianying1716/platform-api#宣传片)。
+星采宣传片 v9（约 60 秒，默认静音，点播放器右下角开声音）：
+
+<video src="https://github.com/user-attachments/assets/e9fcdca2-2fb2-452e-9086-3b4efdf85794" controls width="100%"></video>
+
+<sub>[1080p 全片](https://github.com/user-attachments/assets/be90dda1-128e-4f44-8845-e54debe6172e) · [封面帧](https://raw.githubusercontent.com/lianying1716/platform-api/assets/promo/stargather-promo-v9-poster.jpg) · 产品仓库首页也放了同一支：[platform-api → 宣传片](https://github.com/lianying1716/platform-api#宣传片v9)</sub>
+
 片中用到的真实界面、真实数据与真视频播放，制作与验收方法见本仓库 `promo-video/`。
 
 ## 目录结构
