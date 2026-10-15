@@ -12,6 +12,30 @@ Always `cd` into the owning project before running any command. The projects are
 
 **`main` is the one and only mainline.** All other branches (`feat/*`, `fix/*`, `docs/*`, `chore/*`, etc.) are temporary. Once a temporary branch passes the user-visible acceptance check, merge it back into `main` and delete it, so `main` stays the single continuously deliverable mainline. Do not sit on a temporary branch long-term; everything on `main` should already be accepted.
 
+### Releasing (hard rule)
+
+**Never publish a new version without the user's explicit confirmation.** By default, only develop, commit, and verify. Publishing pushes an update to every user (they see an update prompt and may one-click upgrade), so it is a user-authorized action, not a wrap-up step.
+
+"Publishing a new version" means any of: pushing a version tag (`git tag vX.Y.Z` + `git push origin <tag>`, which triggers `.github/workflows/release.yml` to build and push images to GHCR); creating/updating a GitHub Release (`gh release create` — this is the App's "check for updates" source); pushing/overwriting a versioned image tag or switching a deployment's `PLATFORM_VERSION`; or triggering an upgrade on a production/self-hosted instance (including the updater `/upgrade` endpoint).
+
+1. **Ask first.** When the work reaches a "ready to release" state, stop and confirm the version number and whether to release; if the user hasn't confirmed, stay at commit/local verification and do not tag or push.
+2. **The user sets the version number.** Do not bump it on your own; do not guess unless told.
+3. **Committing is not releasing.** Committing on a temporary branch or merging into `main` is not a release by itself; only the actions above are.
+4. Release only when the user explicitly says "release / publish / cut a new version", then report the version, image, and Release link.
+
+### Every release must be updated + verified on the NAS (hard rule)
+
+**After publishing any new version, update and verify it on the owner's fnOS NAS — both steps, no exceptions.** Publishing is not the finish line; a version that hasn't been run and verified on the NAS is not done.
+
+Standard steps (SSH host `fnos` / `192.168.2.4`; deploy dir `/vol1/1000/docker/platform-api/src`):
+
+1. **Update** to the new version: `PLATFORM_VERSION=<ver> docker compose --profile updater pull` then `PLATFORM_VERSION=<ver> docker compose --profile updater up -d`; or use the web "版本与升级 → 检查更新 → 升级到 <ver>" flow. Confirm `/api/system/version` reports the new `app_version`, `db_in_sync=true`, and `.env`'s `PLATFORM_VERSION` is pinned.
+2. **Verify this change** on the NAS with a real acceptance run (real endpoints / real data / real browser events) and keep command output or screenshots as evidence — "it starts" is not enough.
+3. **Regress**: confirm existing functionality still works (key endpoints, worker, version guard).
+4. Report the result honestly; if something can't be verified (e.g. no admin password), say exactly which step is unverified.
+
+> Rationale: the NAS is the reference self-hosted deployment holding the user's real data. Pushing CI/images without running on the NAS means it was never verified — past regressions (the upgrade `pin` EBUSY, storage-browse availability) were only caught on the NAS.
+
 ## Projects at a Glance
 
 | Dir | Stack | Purpose |

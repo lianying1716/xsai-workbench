@@ -24,6 +24,7 @@
 | 项目 | 许可证 | 平台如何使用 | 合规要点 |
 |---|---|---|---|
 | **MediaCrawler** | NON-COMMERCIAL LEARNING LICENSE 1.1 | 关键词抓取能力来源。一期 CLI 子进程调用；二期在本声明前提下抽离/改写核心逻辑进 `modules/` | 必须保留版权与许可声明；仅限学习研究；不得大规模抓取；不得商用。**授权范围以本声明所述自用学习为准；如需超出，须取得作者书面同意** |
+| **MediaCrawler（已移除）** | NON-COMMERCIAL LEARNING LICENSE 1.1 | **2026-10-10 起 platform-api 不再包含其实代码**：签名改用宽松许可证依赖或平台页面自身完成，快手查询文档自行定义，反检测改用 MIT 的 playwright-stealth | 无遗留副本；历史版本中曾出现的副本已不在当前主线。 |
 | **bili-sync** | MIT | B站逻辑已用 Python 重写进 `modules/bilibili.py` | 保留版权声明即可 |
 | **dysync.net** | MIT | 抖音逻辑已重写进 `modules/douyin.py` | 保留版权声明即可 |
 | **wechat-article-exporter** | MIT | 公众号逻辑已重写进 `modules/wechat_mp.py` | 保留版权声明即可；闭源依赖不带入 |
@@ -31,14 +32,14 @@
 | **yt-dlp** | Unlicense | 作为 PyPI 包依赖 | 无限制 |
 | **xhshow**（小红书签名算法） | 见其仓库 https://github.com/Cloxl/xhshow | 小红书纯算法签名来源 | 抽离时保留致谢与来源链接 |
 
-## 3. MediaCrawler 版权声明（按其许可证要求保留）
+## 3. MediaCrawler 版权声明（历史留痕）
 
 ```
 NON-COMMERCIAL LEARNING LICENSE 1.1
 Copyright (c) [2024] [relakkes@gmail.com]
 ```
 
-凡在 `platform-api` 中抽离或改写自 MediaCrawler 的代码文件，**必须在文件头保留上述版权声明与来源标注**（形如 `# 协议/逻辑来源：MediaCrawler media_platform/<平台>/...（非商业学习许可，仅自用学习）`）。
+> **当前状态（2026-10-10）**：`platform-api` 已不含 MediaCrawler 的复制件或衍生实现，因此当前主线代码不再受上述非商业许可约束。本段保留用于历史留痕与开源前审计；如未来再次引入其代码，必须恢复文件头版权声明与来源标注。
 
 ## 4. 抽离作业守则（PRD 5.7 + 第二阶段）
 

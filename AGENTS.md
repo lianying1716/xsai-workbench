@@ -17,6 +17,53 @@ their code is read and adapted (with source attribution), not rewritten.
 临时分支做完并经用户可见验收后，**合回 `main`** 并在合并后删除，保持 `main` 是持续可交付的单一主线。
 不要长期停留在临时分支上；`main` 上的历史应当始终是「已验收」的状态。
 
+### 发布与版本推送（Release & Versioning）——硬规则
+
+**未经用户明确确认，绝不发布新版本。** 默认只做开发、提交与验证；一旦发布，用户侧就会
+收到更新提示并可能一键升级，因此「发版」是必须由用户点头的动作，不是收尾步骤。
+
+「发布新版本」指以下任一动作（全部必须经用户确认后才可执行）：
+
+- 打版本 tag（`git tag vX.Y.Z`）并推送（`git push origin <tag>`）—— 这会触发
+  `.github/workflows/release.yml` 构建多架构镜像并推 GHCR。
+- 创建 / 更新 GitHub Release（`gh release create`）—— 这是 App「检查更新」读取的
+  `releases/latest` 来源，改了就等于对全体用户宣告新版本。
+- 推送/覆盖版本化镜像 tag（`ghcr.io/.../platform-api:vX.Y.Z`）、或改
+  `PLATFORM_VERSION` 让某个部署切换到新版本。
+- 触发生产/自托管实例的升级（含调 updater 的 `/upgrade`）。
+
+约定：
+
+1. **先问再发。** 到达「可以发布」的状态时，停下来向用户确认版本号与是否发布；用户
+   没确认就停在提交/本地验证，不要自作主张打 tag 或推 tag。
+2. **版本号由用户定。** 不要自行递增版本号；除非用户指定，否则不猜。
+3. **临时分支/`main` 上提交照常**，但**提交 ≠ 发布**：把代码合入 `main` 本身不是发版；
+   只有上述打 tag / 建 Release / 推镜像 / 切部署 才是。是否需要先把改动合回 `main`，
+   按「分支约定」与用户意愿执行。
+4. 用户明确说「发布 / 发版 / 出新版本 / 推送新版本 / release」时，才可执行上述动作；
+   发布后要如实报告版本号、镜像与 Release 链接。
+
+### 每次发版后必须在 NAS 上更新并验证 —— 硬规则
+
+**每个新版本发布后，必须在本人的飞牛 NAS（fnOS）上完成一次「更新 + 功能验证」，缺一不可。**
+发布不等于结束；没在 NAS 上跑通并验证过的版本，不算交付完成。
+
+标准动作（SSH：`fnos` / `192.168.2.4`；部署目录 `/vol1/1000/docker/platform-api/src`）：
+
+1. **更新到新版本**：`PLATFORM_VERSION=<新版本> docker compose --profile updater pull`，
+   然后 `PLATFORM_VERSION=<新版本> docker compose --profile updater up -d`；
+   或走网页「版本与升级 → 检查更新 → 升级到 <新版本>」（updater 边车）。升级后核对
+   `/api/system/version` 的 `app_version` 等于新版本、`db_in_sync=true`、`.env` 的
+   `PLATFORM_VERSION` 已被 pin。
+2. **验证本次改动**：针对这一版新增/修改的功能，在 NAS 上做一次真实验收（真实接口 / 真实
+   数据 / 真实浏览器事件），并留下命令输出或截图证据；不是「能起来就算过」。
+3. **回归**：确认现有功能没被打破（关键接口可用、worker 正常、版本门禁通过）。
+4. 验收结果如实汇报；若无法验证（例如缺管理员密码），写明「未验证到哪一步」，不许含糊带过。
+
+> 背景：NAS 是自托管参考部署，用户的真实数据与环境都在上面。只推 CI/镜像、不在 NAS 上
+> 实跑，等于没验证过——历史多次回归（升级 `pin` 的 EBUSY、目录模块可用性）都是靠 NAS 真机
+> 才暴露出来的。
+
 ## Project Structure & Module Organization
 
 | Dir | Stack | Purpose |
