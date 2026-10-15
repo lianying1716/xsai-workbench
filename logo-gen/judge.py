@@ -1,6 +1,6 @@
 """按 logo 设计标准逐张评审（视觉模型当设计评委）。"""
 import sys, os
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/logo-gen")
+sys.path.insert(0, "/path/to/xsai-workbench/logo-gen")
 from see import ask
 
 Q = """你是资深品牌设计总监。请评审这张 logo 概念图，用于一个叫"星采"的产品：

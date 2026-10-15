@@ -99,7 +99,7 @@
 ```
 nvidia-smi: 2 x NVIDIA GeForce RTX 3060 - 12288 MiB/卡, 驱动 595.84, CUDA 13.2
   GPU0: 10359 MiB 已用; GPU1: 10359 MiB 已用
-  占用者: /www/wwwroot/local-llm/runtime/kvmem/.../llama-kvmem-server（每卡约 10GB）
+  占用者: /path/to/local-llm/runtime/kvmem/.../llama-kvmem-server（每卡约 10GB）
 CPU: 32 vCPU; RAM: 59 GiB; ffmpeg 6.1.1 已装
 ```
 
@@ -227,8 +227,8 @@ CPU: 32 vCPU; RAM: 59 GiB; ffmpeg 6.1.1 已装
 
 ## 8. 参考来源
 
-- nexai 模型目录（本地生成）：`/www/wwwroot/nexai/docs/reference/model-api-reference.md`
-- nexai 品牌图标规范：`/www/wwwroot/nexai/docs/reference/ai-brand-icons.md`
+- nexai 模型目录（本地生成）：`/path/to/nexai/docs/reference/model-api-reference.md`
+- nexai 品牌图标规范：`/path/to/nexai/docs/reference/ai-brand-icons.md`
 - Qwen3-VL 技术报告：https://arxiv.org/abs/2511.21631 ；仓库 https://github.com/QwenLM/Qwen3-VL
 - Qwen3-VL 视频理解/vLLM 采样：https://deepwiki.com/QwenLM/Qwen3-VL/5.4-video-understanding ；
   https://docs.vllm.ai/projects/recipes/en/stable/Qwen/Qwen3-VL.html
@@ -240,7 +240,7 @@ CPU: 32 vCPU; RAM: 59 GiB; ffmpeg 6.1.1 已装
 - video-analyzer（Whisper+关键帧+视觉LLM）：https://github.com/byjlw/video-analyzer
 - PySceneDetect：https://github.com/Breakthrough/PySceneDetect
 - 关键帧采样研究：AKS https://github.com/ncTimTang/AKS ；GenS https://arxiv.org/abs/2503.09146
-- 本机硬件：`/www/wwwroot/local-llm/hardware.md` + 2026-10-05 `nvidia-smi` 实测
+- 本机硬件：`/path/to/local-llm/hardware.md` + 2026-10-05 `nvidia-smi` 实测
 - **xsai5.xyz 视频输入逐模型实测证据：`evidence/2026-10-05-xsai-video-input-probe.md`**
 
 > 说明：VRAM/许可等数字来自公开资料与实测，量级可信，**具体以落地前的复核为准**。

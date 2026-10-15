@@ -1,10 +1,10 @@
 import json, os, subprocess, sys, time
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/logo-gen")
+sys.path.insert(0, "/path/to/xsai-workbench/logo-gen")
 from prompts import COMMON, PROMPTS
 
-OUT = "/www/wwwroot/xsai-workbench/logo-gen/raw"
+OUT = "/path/to/xsai-workbench/logo-gen/raw"
 os.makedirs(OUT, exist_ok=True)
-KEY = open("/tmp/xk").read().strip()
+KEY = open("/path/to/api-key").read().strip()
 API = "https://api.xsai5.xyz/v1/images/generations"
 
 def gen(out, prompt, model="gpt-image-2", size="1024x1024"):

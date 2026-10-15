@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文档基于对 `/www/wwwroot/xsai-workbench/dysync.net` 与 `/www/wwwroot/xsai-workbench/bili-sync` 的源码复盘，定义两个项目并入统一平台时的后端模块拆解、抽离策略、统一数据模型、统一 API、以及必须进入统一前端工作台的配置页面。
+本文档基于对 `/path/to/xsai-workbench/dysync.net` 与 `/path/to/xsai-workbench/bili-sync` 的源码复盘，定义两个项目并入统一平台时的后端模块拆解、抽离策略、统一数据模型、统一 API、以及必须进入统一前端工作台的配置页面。
 
 本轮只覆盖抖音与哔哩哔哩账号内同步模块。`MediaCrawler` 负责多平台公开抓取，`yt-dlp` 负责通用 URL 下载，`faster-whisper` 负责转录，均不替代本模块的账号收藏/关注同步职责。
 

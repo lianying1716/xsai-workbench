@@ -1,6 +1,6 @@
 """从抖音参考位图描出干净的音符矢量（升采样 + 形态学清理 + RDP 简化）。"""
 import sys, numpy as np
-sys.path.insert(0, '/www/wwwroot/xsai-workbench/logo-gen')
+sys.path.insert(0, '/path/to/xsai-workbench/logo-gen')
 from PIL import Image, ImageFilter
 from scipy import ndimage
 from trace import moore_trace, rdp, holes
@@ -46,7 +46,7 @@ def to_path(mask, up, target=100.0, eps=0.35, ox=0.0, oy=0.0):
 
 
 if __name__ == "__main__":
-    ref = "/www/wwwroot/xsai-workbench/MediaCrawler/api/webui/logos/douyin.png"
+    ref = "/path/to/xsai-workbench/MediaCrawler/api/webui/logos/douyin.png"
     im = Image.open(ref)
     mm, up = clean_note(im)
     print("cleaned mask", mm.shape, "px", mm.sum(), "holes", len(holes(mm)))

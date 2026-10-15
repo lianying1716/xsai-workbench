@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prompts12 import PROMPTS, build
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "raw12")
 os.makedirs(OUT, exist_ok=True)
-KEY = open("/tmp/xk").read().strip()
+KEY = open("/path/to/api-key").read().strip()
 API = "https://api.xsai5.xyz/v1/images/generations"
 MODEL = os.environ.get("IMG_MODEL", "gpt-image-2.5")
 SIZE = os.environ.get("IMG_SIZE", "1024x1024")

@@ -3,7 +3,7 @@
 用法: python3 llm_svg.py <img.png> <out.svg> [model]
 """
 import base64, json, subprocess, sys, os, tempfile, re
-KEY=open("/tmp/xk").read().strip()
+KEY=open("/path/to/api-key").read().strip()
 API="https://api.xsai5.xyz/v1/chat/completions"
 
 PROMPT = """你是矢量图形工程师。请把这张 LOGO 图重建为一份**干净的 SVG**（viewBox 用原图比例）。

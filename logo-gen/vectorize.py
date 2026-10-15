@@ -37,7 +37,7 @@ FLATTEN_PROMPT = (
 
 
 def flatten_via_api(src: Path, out: Path, model="gpt-image-2.5") -> bool:
-    key = Path("/tmp/xk").read_text().strip()
+    key = Path("/path/to/api-key").read_text().strip()
     b64 = base64.b64encode(src.read_bytes()).decode()
     body = json.dumps({"model": model, "prompt": FLATTEN_PROMPT,
                        "size": "1024x1024", "n": 1,

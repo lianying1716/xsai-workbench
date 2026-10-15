@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>星采 Stargather · 把收藏的视频，变成自己的内容知识库</title>
+  <meta name="description" content="星采 Stargather 是免费、可私有化部署的多平台内容采集与 AI 分析平台。喜欢的博主自动追更，收藏、点赞、关键词定时采集，自动下载、转录、拆解，再通过 API / MCP 接入你自己的模型。" />
+  <meta name="theme-color" content="#f5f0e6" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="assets/logo-symbol.svg" />
+  <script>
+    (function () {
+      try {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.documentElement.classList.add('js')
+        }
+      } catch (e) {}
+    })()
+  </script>
+  <style>
+    :root {
+      --paper: #f5f0e6;
+      --paper-2: #ece5d6;
+      --card: #fffdf8;
+      --ink: #16151a;
+      --ink-2: #3b393f;
+      --muted: #6d685f;
+      --faint: #969083;
+      --line-soft: #d5ccb9;
+      --red: #c13a2c;
+      --red-deep: #98251b;
+      --blue: #2249c9;
+      --yellow: #eeb51b;
+      --green: #1e7a4d;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      --sh-sm: 3px 3px 0 var(--ink);
+      --sh: 5px 5px 0 var(--ink);
+      --gutter: 18px;
+      --tap: 48px;
+      --bar-h: 68px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.68;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(var(--bar-h) + var(--safe-bottom) + 8px);
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .45;
+      background-image: radial-gradient(color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px);
+      background-size: 4px 4px;
+      mix-blend-mode: multiply;
+    }
+    img, svg { max-width: 100%; display: block; }
+    [hidden] { display: none !important; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    ::selection { background: var(--yellow); }
+
+    .wrap { width: 100%; padding: 0 var(--gutter); position: relative; z-index: 2; }
+    section { position: relative; padding: 54px 0; }
+    section[id], #top { scroll-margin-top: calc(var(--safe-top) + 62px); }
+    .band { background: var(--card); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+
+    .js .rv, .js .rv-k { opacity: 0; }
+
+    .top {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      padding-top: var(--safe-top);
+      background: color-mix(in srgb, var(--paper) 90%, transparent);
+      backdrop-filter: blur(12px) saturate(1.2);
+      border-bottom: 2px solid transparent;
+      transition: border-color .25s ease;
+    }
+    .top.solid { border-bottom-color: var(--ink); }
+    .top-in { height: 58px; padding: 0 var(--gutter); display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand img { width: 34px; height: 34px; border: 2px solid var(--ink); box-shadow: var(--sh-sm); }
+    .brand b { font-size: 17px; letter-spacing: .01em; }
+    .brand span span, .brand > span > span { display: block; font: 800 9px/1 var(--font); letter-spacing: .2em; color: var(--muted); margin-top: 3px; }
+    .top-cta {
+      margin-left: auto; min-height: 44px; padding: 0 16px;
+      display: inline-flex; align-items: center;
+      border: 2px solid var(--ink); background: var(--red); color: #fff;
+      font-size: 13.5px; font-weight: 750; box-shadow: var(--sh-sm);
+    }
+    .top-cta:active { transform: translate(1px,1px); box-shadow: none; }
+
+    .progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 70;
+      background: linear-gradient(90deg, var(--red), var(--yellow), var(--blue));
+    }
+
+    .hero { padding: calc(var(--safe-top) + 84px) 0 44px; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; top: calc(var(--safe-top) + 58px); left: 0; right: 0; height: 6px;
+      background: linear-gradient(90deg, var(--red) 0 33.4%, var(--blue) 33.4% 66.7%, var(--yellow) 66.7% 100%);
+      border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(420px 280px at 84% 4%, color-mix(in srgb, var(--yellow) 30%, transparent), transparent 70%);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 13px; border: 2px solid var(--ink); background: var(--card);
+      box-shadow: var(--sh-sm); font-size: 12.5px; font-weight: 750;
+    }
+    .pill i { width: 8px; height: 8px; background: var(--green); border: 1.4px solid var(--ink); border-radius: 50%; }
+    h1 { margin: 20px 0 0; font-size: clamp(30px, 9vw, 40px); line-height: 1.14; letter-spacing: -.01em; font-weight: 880; }
+    h1 em { font-style: normal; color: var(--red); }
+    .lead { margin: 16px 0 0; font-size: 15.5px; line-height: 1.82; color: var(--ink-2); }
+    .lead b { color: var(--ink); }
+    .hero-acts { display: grid; gap: 11px; margin-top: 24px; }
+
+    .plats {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 24px; padding: 16px 2px 4px;
+      border-top: 1.5px dashed var(--line-soft);
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+    }
+    .plats::-webkit-scrollbar { display: none; }
+    .plat {
+      flex: none; scroll-snap-align: start;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border: 1.6px solid var(--ink); background: var(--card);
+      font-size: 13px; font-weight: 700;
+    }
+    .plat svg { width: 17px; height: 17px; flex: none; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: var(--tap); padding: 0 20px;
+      border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+      font: 750 15px/1 var(--font);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn.primary { background: var(--red); color: #fff; }
+    .btn.ink { background: var(--ink); color: #fff; }
+    .btn:active { transform: translate(1px,1px); box-shadow: none !important; }
+    .btn .ar { transition: transform .18s ease; }
+    .btn:active .ar { transform: translateX(3px); }
+
+    .kick { display: inline-flex; align-items: center; gap: 8px; font: 800 11.5px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+    .kick::before { content: ""; width: 18px; height: 3px; background: var(--red); }
+    h2 { margin: 12px 0 0; font-size: clamp(25px, 7.4vw, 32px); line-height: 1.2; letter-spacing: -.01em; font-weight: 850; }
+    .sub { margin: 13px 0 0; font-size: 15px; line-height: 1.8; color: var(--ink-2); }
+
+    .pains { display: grid; gap: 14px; margin-top: 26px; }
+    .pain { position: relative; border: 2px solid var(--ink); background: var(--card); padding: 20px 18px; box-shadow: var(--sh-sm); overflow: hidden; }
+    .pain::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
+    .pain:nth-child(1)::before { background: var(--red); }
+    .pain:nth-child(2)::before { background: var(--blue); }
+    .pain:nth-child(3)::before { background: var(--yellow); }
+    .pain .no { font: 820 12px/1 var(--mono); color: var(--faint); letter-spacing: .06em; }
+    .pain h3 { margin: 12px 0 6px; font-size: 17.5px; line-height: 1.35; }
+    .pain p { margin: 0; font-size: 14px; color: var(--ink-2); }
+
+    .flow { margin-top: 28px; position: relative; }
+    .flow::before {
+      content: ""; position: absolute; left: 17px; top: 12px; bottom: 12px; width: 2px;
+      background: repeating-linear-gradient(180deg, var(--ink) 0 6px, transparent 6px 12px);
+    }
+    .step { position: relative; padding: 0 0 22px 50px; }
+    .step:last-child { padding-bottom: 0; }
+    .step .dot {
+      position: absolute; left: 0; top: 0; width: 36px; height: 36px;
+      display: grid; place-items: center;
+      border: 2px solid var(--ink); background: var(--card); box-shadow: var(--sh-sm);
+      font: 820 12.5px/1 var(--mono); z-index: 1;
+    }
+    .step:last-child .dot { background: var(--ink); color: var(--yellow); }
+    .step h3 { margin: 4px 0 4px; font-size: 16.5px; line-height: 1.3; }
+    .step p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+    .rail-hint { display: flex; align-items: center; gap: 7px; margin-top: 20px; font: 700 11.5px/1 var(--mono); color: var(--faint); letter-spacing: .05em; }
+    .rail-hint i { width: 16px; height: 2px; background: var(--faint); }
+    .rail {
+      display: flex; gap: 13px;
+      margin: 18px calc(var(--gutter) * -1) 0;
+      padding: 4px var(--gutter) 14px;
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+    .rail::-webkit-scrollbar { display: none; }
+    .cap {
+      flex: none; scroll-snap-align: center;
+      width: min(76vw, 300px);
+      border: 2px solid var(--ink); background: var(--card);
+      padding: 20px 18px 22px; box-shadow: var(--sh-sm);
+      display: flex; flex-direction: column;
+    }
+    .cap .tg { align-self: flex-start; padding: 4px 8px; border: 1.4px solid var(--ink); font: 760 10px/1 var(--mono); }
+    .tg.red { background: #f7d6d1; } .tg.blue { background: #d9e2ff; }
+    .tg.yel { background: #fbe7b4; } .tg.grn { background: #cdebd8; }
+    .cap h3 { margin: 14px 0 7px; font-size: 16.5px; line-height: 1.32; }
+    .cap p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+    .cap .n { margin-top: auto; padding-top: 16px; font: 850 26px/1 var(--mono); color: color-mix(in srgb, var(--ink) 14%, transparent); }
+
+    .cap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-top: 20px; }
+    .mini { border: 1.8px solid var(--ink); background: var(--card); padding: 14px 13px 16px; }
+    .mini h3 { margin: 9px 0 5px; font-size: 14px; line-height: 1.32; }
+    .mini p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--muted); }
+    .mini .tg { display: inline-block; padding: 3px 6px; border: 1.3px solid var(--ink); font: 750 9.5px/1 var(--mono); }
+
+    .frame { border: 2px solid var(--ink); background: var(--card); box-shadow: var(--sh-sm); overflow: hidden; margin-top: 24px; }
+    .frame img { width: 100%; height: auto; }
+    .frame figcaption { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-top: 2px solid var(--ink); background: var(--paper-2); font: 700 11.5px/1.45 var(--mono); color: var(--muted); }
+    .frame figcaption i { width: 7px; height: 7px; background: var(--red); border: 1.3px solid var(--ink); flex: none; }
+
+    .checks { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 14px; }
+    .checks li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; }
+    .checks .ck { width: 24px; height: 24px; border: 2px solid var(--ink); background: var(--yellow); display: grid; place-items: center; font: 900 13px/1 var(--mono); }
+    .checks b { display: block; font-size: 15px; }
+    .checks span { font-size: 13.5px; color: var(--muted); }
+    .wx-note {
+      margin: 18px 0 0; padding-left: 12px;
+      border-left: 3px solid var(--line-soft);
+      color: var(--faint); font-size: 12.4px; line-height: 1.7;
+    }
+
+    /* AI 接入能力 */
+    .ai-list { display: grid; gap: 12px; margin-top: 22px; }
+    .ai { border: 1.8px solid var(--ink); background: var(--card); padding: 17px 16px 18px; }
+    .ai .hd { display: flex; align-items: center; gap: 10px; }
+    .ai .ico {
+      width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+      border: 1.8px solid var(--ink); background: var(--paper-2); font: 800 13px/1 var(--mono);
+    }
+    .ai h3 { margin: 0; font-size: 15.5px; line-height: 1.3; }
+    .ai p { margin: 10px 0 0; font-size: 13.2px; line-height: 1.68; color: var(--muted); }
+    .ai code { font: 700 11.5px/1.4 var(--mono); background: var(--paper-2); border: 1.3px solid var(--ink); padding: 1px 4px; }
+
+    .scope-row { display: grid; gap: 9px; margin-top: 18px; }
+    .scope {
+      display: grid; grid-template-columns: auto 1fr; gap: 11px; align-items: start;
+      border: 1.6px solid var(--ink); background: var(--card); padding: 12px 13px;
+    }
+    .scope .tag {
+      font: 800 10.5px/1.5 var(--mono); letter-spacing: .04em;
+      border: 1.4px solid var(--ink); padding: 2px 7px; background: var(--yellow); white-space: nowrap;
+    }
+    .scope.read .tag { background: #cdebd8; }
+    .scope.admin .tag { background: #f7d6d1; }
+    .scope span { font-size: 12.8px; line-height: 1.6; color: var(--ink-2); }
+
+    .tools { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+    .tool {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 10px; border: 1.5px solid var(--ink); background: var(--card);
+      font-size: 11.5px;
+    }
+    .tool i { width: 5px; height: 5px; background: var(--green); border: 1.1px solid var(--ink); flex: none; }
+    .tool.op i { background: var(--yellow); }
+    .tool code { font: 700 10.5px/1 var(--mono); }
+
+    /* 微信二维码 */
+    .wx { margin-top: 22px; border: 2px solid var(--ink); background: var(--card); box-shadow: var(--sh-sm); padding: 20px 18px 18px; text-align: center; }
+    .wx .qr { border: 2px solid var(--ink); background: #fff; padding: 10px; width: fit-content; margin: 0 auto; }
+    .wx .qr img { width: min(240px, 66vw); height: auto; display: block; image-rendering: pixelated; }
+    .wx .who { margin: 15px 0 3px; font-size: 15px; font-weight: 780; }
+    .wx .what { margin: 0; font-size: 12.6px; color: var(--muted); }
+    .wx .hint {
+      display: none; align-items: center; justify-content: center; gap: 7px;
+      margin-top: 14px; padding: 10px 14px;
+      border: 1.6px dashed var(--red); background: color-mix(in srgb, var(--red) 8%, transparent);
+      color: var(--red); font-size: 13px; font-weight: 750;
+      animation: hintPulse 2s ease-in-out infinite;
+      text-align: center; line-height: 1.55;
+    }
+    .wx .hint b { font-weight: 800; }
+    /* 默认（JS 未执行时）按「非微信的手机浏览器」处理：教保存后去相册。
+       注意底色规则必须是 display:none，否则两句提示会同时显示。 */
+    .wx .hint[data-hint="mobile"] { display: inline-flex; }
+    body.env-wechat .wx .hint[data-hint="mobile"] { display: none; }
+    body.env-wechat .wx .hint[data-hint="wechat"] { display: inline-flex; }
+    .wx .fallback {
+      margin: 14px 0 0; padding-top: 13px; border-top: 1.5px dashed var(--line-soft);
+      text-align: left; color: var(--muted); font-size: 12.4px; line-height: 1.75;
+    }
+    .wx .fallback b { display: block; color: var(--ink); font-size: 12.8px; margin-bottom: 4px; }
+    .wx .fallback kbd {
+      display: inline-block; padding: 1px 6px; margin: 0 1px;
+      border: 1.3px solid var(--ink); background: var(--paper-2);
+      font: 700 11.5px/1.6 var(--mono);
+    }
+    @keyframes hintPulse { 0%,100% { opacity: 1 } 50% { opacity: .62 } }
+    @media (prefers-reduced-motion: reduce) { .wx .hint { animation: none } }
+
+    .board { border: 2px solid var(--ink); background: var(--card); box-shadow: var(--sh-sm); margin-top: 26px; }
+    .brow { padding: 14px 15px; border-bottom: 1.6px solid var(--ink); }
+    .brow:last-child { border-bottom: 0; }
+    .brow .k { font: 800 11px/1 var(--mono); letter-spacing: .05em; color: var(--red); margin-bottom: 5px; }
+    .brow .v { font-size: 13.5px; color: var(--ink-2); }
+    .brow .v b { color: var(--ink); }
+
+    .code { border: 2px solid var(--ink); background: #141319; color: #ece7dd; box-shadow: var(--sh-sm); overflow: hidden; margin-top: 22px; max-width: 100%; }
+    .code-h { display: flex; align-items: center; gap: 7px; padding: 10px 13px; border-bottom: 1.6px solid #38353f; font: 700 11px/1 var(--mono); color: #aea79c; }
+    .code-h i { width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); }
+    pre { margin: 0; padding: 15px 13px; max-width: 100%; overflow-x: auto; font: 11.5px/1.75 var(--mono); white-space: pre; -webkit-overflow-scrolling: touch; }
+    .c-dim { color: #857e73; } .c-k { color: #ffb96d; } .c-s { color: #9ee8a9; } .c-b { color: #86b8ff; }
+
+    .faq { margin-top: 24px; border-top: 2px solid var(--ink); }
+    details { border-bottom: 1.6px solid var(--line-soft); }
+    summary {
+      cursor: pointer; list-style: none; position: relative;
+      min-height: 56px; padding: 17px 42px 17px 0;
+      font-size: 15.5px; font-weight: 750; display: flex; align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; position: absolute; right: 6px; font: 800 21px/1 var(--mono); color: var(--red); }
+    details[open] summary { color: var(--red); }
+    details[open] summary::after { content: "−"; }
+    details p { margin: 0 0 18px; font-size: 14px; line-height: 1.78; color: var(--ink-2); }
+
+    .cta { background: var(--ink); color: #fff; border-top: 7px solid var(--red); padding: 52px 0 30px; }
+    .cta h2 { color: #fff; }
+    .cta .sub { color: rgba(255,255,255,.76); }
+    .cta .kick { color: var(--yellow); } .cta .kick::before { background: var(--yellow); }
+    .cta-acts { display: grid; gap: 11px; margin-top: 24px; }
+    .cta .btn { border-color: #fff; background: transparent; color: #fff; }
+    .cta .btn.primary { background: var(--red); border-color: var(--red); }
+    .contact { margin-top: 26px; border: 2px solid #fff; background: rgba(255,255,255,.06); padding: 20px 18px; }
+    .contact h3 { margin: 0 0 6px; font-size: 17px; }
+    .contact > p { margin: 0 0 14px; font-size: 13px; color: rgba(255,255,255,.72); }
+    .cline { padding: 11px 0; border-top: 1px solid rgba(255,255,255,.22); font-size: 13.5px; }
+    .cline .k { display: block; font: 750 10.5px/1 var(--mono); letter-spacing: .06em; color: rgba(255,255,255,.55); margin-bottom: 4px; }
+    .cline b { font-weight: 650; word-break: break-all; }
+    .note { margin: 15px 0 0; font-size: 12px; line-height: 1.65; color: rgba(255,255,255,.6); }
+
+    footer { padding: 26px 0 30px; }
+    .foot { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+    .fb { display: flex; align-items: center; gap: 9px; font-weight: 820; }
+    .fb img { width: 28px; height: 28px; border: 1.6px solid var(--ink); }
+    .foot p { margin: 0; font-size: 12px; color: var(--muted); }
+    .fl { display: flex; flex-wrap: wrap; gap: 14px; width: 100%; font-size: 13px; }
+    .fl a { color: var(--ink-2); }
+
+    .actionbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+      padding: 10px var(--gutter) calc(10px + var(--safe-bottom));
+      background: color-mix(in srgb, var(--paper) 94%, transparent);
+      backdrop-filter: blur(12px) saturate(1.2);
+      border-top: 2px solid var(--ink);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .actionbar .ab-txt { flex: 1; min-width: 0; }
+    .actionbar .ab-txt b { display: block; font-size: 13.5px; }
+    .actionbar .ab-txt span { display: block; font-size: 11px; color: var(--muted); }
+    .actionbar .btn { flex: none; min-height: 44px; padding: 0 17px; font-size: 14px; box-shadow: var(--sh-sm); }
+
+    @media (min-width: 560px) {
+      .pains { grid-template-columns: 1fr 1fr; }
+      .hero-acts, .cta-acts { grid-template-columns: 1fr 1fr; }
+      .cap-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 860px) {
+      :root { --gutter: 32px; }
+      .wrap { max-width: 760px; margin: 0 auto; }
+      .rail { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .rv, .js .rv-k { opacity: 1 !important; }
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="p-douyin" viewBox="0 0 24 24"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02c.08 1.53.63 3.09 1.75 4.17c1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97c-.57-.26-1.1-.59-1.62-.93c-.01 2.92.01 5.84-.02 8.75c-.08 1.4-.54 2.79-1.35 3.94c-1.31 1.92-3.58 3.17-5.91 3.21c-1.43.08-2.86-.31-4.08-1.03c-2.02-1.19-3.44-3.37-3.65-5.71c-.02-.5-.03-1-.01-1.49c.18-1.9 1.12-3.72 2.58-4.96c1.66-1.44 3.98-2.13 6.15-1.72c.02 1.48-.04 2.96-.04 4.44c-.99-.32-2.15-.23-3.02.37c-.63.41-1.11 1.04-1.36 1.75c-.21.51-.15 1.07-.14 1.61c.24 1.64 1.82 3.02 3.5 2.87c1.12-.01 2.19-.66 2.77-1.61c.19-.33.4-.67.41-1.06c.1-1.79.06-3.57.07-5.36c.01-4.03-.01-8.05.02-12.07"/></symbol>
+      <symbol id="p-bilibili" viewBox="0 0 24 24"><path fill="currentColor" d="M17.813 4.653h.854q2.266.08 3.773 1.574Q23.946 7.72 24 9.987v7.36q-.054 2.266-1.56 3.773c-1.506 1.507-2.262 1.524-3.773 1.56H5.333q-2.266-.054-3.773-1.56C.053 19.614.036 18.858 0 17.347v-7.36q.054-2.267 1.56-3.76t3.773-1.574h.774l-1.174-1.12a1.23 1.23 0 0 1-.373-.906q0-.534.373-.907l.027-.027q.4-.373.92-.373t.92.373L9.653 4.44q.107.106.187.213h4.267a.8.8 0 0 1 .16-.213l2.853-2.747q.4-.373.92-.373c.347 0 .662.151.929.4s.391.551.391.907q0 .532-.373.906zM5.333 7.24q-1.12.027-1.88.773q-.76.748-.786 1.894v7.52q.026 1.146.786 1.893t1.88.773h13.334q1.12-.026 1.88-.773t.786-1.893v-7.52q-.026-1.147-.786-1.894t-1.88-.773zM8 11.107q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q0-.56.386-.947q.387-.386.947-.386m8 0q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q.025-.586.4-.96q.373-.373.933-.373"/></symbol>
+      <symbol id="p-xhs" viewBox="0 0 24 24"><path fill="currentColor" d="M22.405 9.879c.002.016.01.02.07.019h.725a.797.797 0 0 0 .78-.972a.794.794 0 0 0-.884-.618a.795.795 0 0 0-.692.794c0 .101-.002.666.001.777m-11.509 4.808c-.203.001-1.353.004-1.685.003a2.5 2.5 0 0 1-.766-.126a.025.025 0 0 0-.03.014L7.7 16.127a.025.025 0 0 0 .01.032c.111.06.336.124.495.124c.66.01 1.32.002 1.981 0q.017 0 .023-.015l.712-1.545a.025.025 0 0 0-.024-.036zM.477 9.91c-.071 0-.076.002-.076.01l-.01.08c-.027.397-.038.495-.234 3.06c-.012.24-.034.389-.135.607c-.026.057-.033.042.003.112c.046.092.681 1.523.787 1.74c.008.015.011.02.017.02c.008 0 .033-.026.047-.044q.219-.282.371-.606c.306-.635.44-1.325.486-1.706c.014-.11.021-.22.03-.33l.204-2.616l.022-.293c.003-.029 0-.033-.03-.034zm7.203 3.757a1.4 1.4 0 0 1-.135-.607c-.004-.084-.031-.39-.235-3.06a.4.4 0 0 0-.01-.082c-.004-.011-.052-.008-.076-.008h-1.48c-.03.001-.034.005-.03.034l.021.293q.114 1.473.233 2.946c.05.4.186 1.085.487 1.706c.103.215.223.419.37.606c.015.018.037.051.048.049c.02-.003.742-1.642.804-1.765c.036-.07.03-.055.003-.112m3.861-.913h-.872a.126.126 0 0 1-.116-.178l1.178-2.625a.025.025 0 0 0-.023-.035l-1.318-.003a.148.148 0 0 1-.135-.21l.876-1.954a.025.025 0 0 0-.023-.035h-1.56q-.017 0-.024.015l-.926 2.068c-.085.169-.314.634-.399.938a.5.5 0 0 0-.02.191a.46.46 0 0 0 .23.378a1 1 0 0 0 .46.119h.59c.041 0-.688 1.482-.834 1.972a.5.5 0 0 0-.023.172a.47.47 0 0 0 .23.398c.15.092.342.12.475.12l1.66-.001q.017 0 .023-.015l.575-1.28a.025.025 0 0 0-.024-.035m-6.93-4.937H3.1a.032.032 0 0 0-.034.033c0 1.048-.01 2.795-.01 6.829c0 .288-.269.262-.28.262h-.74c-.04.001-.044.004-.04.047c.001.037.465 1.064.555 1.263c.01.02.03.033.051.033c.157.003.767.009.938-.014c.153-.02.3-.06.438-.132c.3-.156.49-.419.595-.765c.052-.172.075-.353.075-.533q.003-3.495-.007-6.991a.03.03 0 0 0-.032-.032zm11.784 6.896q-.002-.02-.024-.022h-1.465c-.048-.001-.049-.002-.05-.049v-4.66c0-.072-.005-.07.07-.07h.863c.08 0 .075.004.075-.074V8.393c0-.082.006-.076-.08-.076h-3.5c-.064 0-.075-.006-.075.073v1.445c0 .083-.006.077.08.077h.854c.075 0 .07-.004.07.07v4.624c0 .095.008.084-.085.084c-.37 0-1.11-.002-1.304 0c-.048.001-.06.03-.06.03l-.697 1.519s-.014.025-.008.036s.013.008.058.008q2.622.003 5.243.002c.03-.001.034-.006.035-.033zm4.177-3.43q0 .021-.02.024c-.346.006-.692.004-1.037.004q-.021-.003-.022-.024q-.006-.651-.01-1.303c0-.072-.006-.071.07-.07l.733-.003c.041 0 .081.002.12.015c.093.025.16.107.165.204c.006.431.002 1.153.001 1.153m2.67.244a1.95 1.95 0 0 0-.883-.222h-.18c-.04-.001-.04-.003-.042-.04V10.21q.001-.198-.025-.394a1.8 1.8 0 0 0-.153-.53a1.53 1.53 0 0 0-.677-.71a2.2 2.2 0 0 0-1-.258c-.153-.003-.567 0-.72 0c-.07 0-.068.004-.068-.065V7.76c0-.031-.01-.041-.046-.039H17.93s-.016 0-.023.007q-.008.008-.008.023v.546c-.008.036-.057.015-.082.022h-.95c-.022.002-.028.008-.03.032v1.481c0 .09-.004.082.082.082h.913c.082 0 .072.128.072.128v1.148s.003.117-.06.117h-1.482c-.068 0-.06.082-.06.082v1.445s-.01.068.064.068h1.457c.082 0 .076-.006.076.079v3.225c0 .088-.007.081.082.081h1.43c.09 0 .082.007.082-.08v-3.27c0-.029.006-.035.033-.035l2.323-.003a.7.7 0 0 1 .28.061a.46.46 0 0 1 .274.407c.008.395.003.79.003 1.185c0 .259-.107.367-.33.367h-1.218c-.023.002-.029.008-.028.033q.276.655.57 1.303a.05.05 0 0 0 .04.026c.17.005.34.002.51.003c.15-.002.517.004.666-.01a2 2 0 0 0 .408-.075c.59-.18.975-.698.976-1.313v-1.981q.001-.191-.034-.38c0 .078-.029-.641-.724-.998"/></symbol>
+      <symbol id="p-kuaishou" viewBox="0 0 24 24"><path fill="currentColor" d="M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2.32-1.888 4.2-4.218 4.2h-6.202a4.22 4.22 0 0 1-4.023-2.938l-3.676 1.833a2.04 2.04 0 0 1-2.731-.903a2 2 0 0 1-.216-.907v-5.94a2.03 2.03 0 0 1 2.035-2.024a2.04 2.04 0 0 1 .919.218l3.673 1.85a4.22 4.22 0 0 1 4.02-2.925zm-.062 2.162h-6.078c-1.153 0-2.09.921-2.108 2.065v3.247c0 1.148.925 2.081 2.073 2.1h6.113c1.153 0 2.09-.922 2.109-2.065v-3.247a2.104 2.104 0 0 0-2.074-2.1zM4.18 15.72a.554.554 0 0 0-.555.542v3.734a.556.556 0 0 0 .798.496l.01-.004l3.463-1.756V17.51l-3.467-1.73a.56.56 0 0 0-.249-.06M9.28 0a5.67 5.67 0 0 1 4.98 2.965a4.92 4.92 0 0 1 3.36-1.317c2.714 0 4.913 2.177 4.913 4.863s-2.2 4.863-4.912 4.863a4.92 4.92 0 0 1-3.996-2.034a5.65 5.65 0 0 1-4.345 2.034c-3.131 0-5.67-2.546-5.67-5.687S6.149 0 9.28 0m8.34 3.926c-1.441 0-2.61 1.157-2.61 2.585s1.169 2.585 2.61 2.585c1.443 0 2.612-1.157 2.612-2.585s-1.169-2.585-2.611-2.585zM9.28 2.287a3.395 3.395 0 0 0-3.39 3.4c0 1.877 1.518 3.4 3.39 3.4a3.395 3.395 0 0 0 3.39-3.4c0-1.878-1.518-3.4-3.39-3.4"/></symbol>
+      <symbol id="p-zhihu" viewBox="0 0 24 24"><path fill="currentColor" d="M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078q-.408 1.096-.68 2.11h4.587c.545-.006.445 1.168.445 1.171H9.384a58 58 0 0 1-.112 3.797h2.712c.388.023.393 1.251.393 1.266H9.183a9.2 9.2 0 0 1-.408 2.102l.757-.604c.452.456 1.512 1.712 1.906 2.177c.473.681.063 2.081.063 2.081l-2.794-3.382c-.653 2.518-1.845 3.607-1.845 3.607c-.523.468-1.58.82-2.64.516c2.218-1.73 3.44-3.917 3.667-6.497H4.491c0-.015.197-1.243.806-1.266h2.71c.024-.32.086-3.254.086-3.797H6.598c-.136.406-.158.447-.268.753c-.594 1.095-1.603 1.122-1.907 1.155c.906-1.821 1.416-3.6 1.591-4.064c.425-1.124 1.671-1.125 1.671-1.125M13.078 6h6.377v11.33h-2.573l-2.184 1.373l-.401-1.373h-1.219zm1.313 1.219v8.86h.623l.263.937l1.455-.938h1.456v-8.86z"/></symbol>
+      <symbol id="p-wechat_mp" viewBox="0 0 24 24"><path fill="currentColor" d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213c0 .163.13.295.29.295a.33.33 0 0 0 .167-.054l1.903-1.114a.86.86 0 0 1 .717-.098a10.2 10.2 0 0 0 2.837.403c.276 0 .543-.027.811-.05c-.857-2.578.157-4.972 1.932-6.446c1.703-1.415 3.882-1.98 5.853-1.838c-.576-3.583-4.196-6.348-8.596-6.348M5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178a1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18m5.34 2.867c-1.797-.052-3.746.512-5.28 1.786c-1.72 1.428-2.687 3.72-1.78 6.22c.942 2.453 3.666 4.229 6.884 4.229c.826 0 1.622-.12 2.361-.336a.72.72 0 0 1 .598.082l1.584.926a.3.3 0 0 0 .14.047c.134 0 .24-.111.24-.247c0-.06-.023-.12-.038-.177l-.327-1.233a.6.6 0 0 1-.023-.156a.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983a.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983a.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <header class="top" id="top-bar">
+    <div class="top-in">
+      <a class="brand" href="#top" aria-label="星采 Stargather 首页">
+        <img src="assets/logo-symbol.svg" alt="" width="34" height="34" />
+        <span><b>星采</b><span>Stargather</span></span>
+      </a>
+      <a class="top-cta" href="/demo/">在线演示</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <span class="pill rv"><i></i>免费 · 私有化部署 · 数据自己掌握</span>
+        <h1 class="rv">收藏过的教程，<br />不该消失在<em>收藏夹</em>里</h1>
+        <p class="lead rv">
+          刷抖音、B站、小红书时收藏的教程、科普和对标视频，过一阵就找不到了。
+          星采把喜欢的博主、收藏和点赞自动归集到本地，下载、转成文字、做 AI 拆解，
+          沉淀成 <b>真正用得上、能喂给你自己模型</b>的内容知识库。
+        </p>
+        <div class="hero-acts rv">
+          <a class="btn primary" href="/demo/">在线演示 <span class="ar">→</span></a>
+          <a class="btn" href="#deploy">获取私有化部署</a>
+        </div>
+        <div class="plats rv" aria-label="支持平台">
+          <span class="plat"><svg><use href="#p-douyin"></use></svg>抖音</span>
+          <span class="plat"><svg><use href="#p-bilibili"></use></svg>B站</span>
+          <span class="plat"><svg><use href="#p-xhs"></use></svg>小红书</span>
+          <span class="plat"><svg><use href="#p-kuaishou"></use></svg>快手</span>
+          <span class="plat"><svg><use href="#p-zhihu"></use></svg>知乎</span>
+          <span class="plat"><svg><use href="#p-wechat_mp"></use></svg>公众号</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="pain" class="band">
+      <div class="wrap">
+        <span class="kick rv">The problem</span>
+        <h2 class="rv">我们收藏的内容，<br />大多只被收藏过一次</h2>
+        <p class="sub rv">信息从来不缺，缺的是留下来、用起来。散在各平台的收藏，最后只是又一个没人翻的抽屉。</p>
+        <div class="pains">
+          <article class="pain rv-k"><span class="no">01 / 收藏即遗忘</span><h3>收藏夹越来越满，回看率越来越低</h3><p>刷到有用的视频先点收藏，想着以后再看。平台推荐流一换，连自己收藏过什么都忘了。</p></article>
+          <article class="pain rv-k"><span class="no">02 / 平台各自为战</span><h3>账号、关注、收藏散在五六个 App 里</h3><p>抖音、B站、小红书、快手、知乎、公众号各有各的收藏夹，没有一处能统一查看和管理。</p></article>
+          <article class="pain rv-k"><span class="no">03 / 素材用不起来</span><h3>视频不能搜、不能引用，AI 也吃不到</h3><p>想做选题、做对标、喂给自己的模型，却只能人工复制标题、听写内容、整理成表格。</p></article>
+        </div>
+        <figure class="frame rv">
+          <img src="assets/art/scattered-saves.webp" alt="散落流失的收藏卡片与重新归整的素材堆" width="1200" height="686" loading="lazy" />
+          <figcaption><i></i>散落 → 归整：把流失的收藏重新收拢成可用的素材</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="flow">
+      <div class="wrap">
+        <span class="kick rv">The pipeline</span>
+        <h2 class="rv">从「刷到」到「用得上」，<br />一条流水线跑完</h2>
+        <p class="sub rv">登录一次平台账号、打开要跟踪的博主或收藏夹，后面的下载、转录、分析和归档交给后台队列。</p>
+        <div class="flow">
+          <div class="step rv-k"><span class="dot">01</span><h3>关注 / 收藏 / 点赞</h3><p>导入你关注的博主，或打开收藏、点赞同步开关。</p></div>
+          <div class="step rv-k"><span class="dot">02</span><h3>自动追更与采集</h3><p>按小时、天或周检查新内容，也支持关键词采集。</p></div>
+          <div class="step rv-k"><span class="dot">03</span><h3>下载到本地</h3><p>视频、封面、元数据进入你自己的存储目录。</p></div>
+          <div class="step rv-k"><span class="dot">04</span><h3>语音转文字</h3><p>本地 faster-whisper 转录，生成可搜索的全文。</p></div>
+          <div class="step rv-k"><span class="dot">05</span><h3>AI 分析与拆解</h3><p>摘要、标签、内容判类，以及对标账号爆款拆解。</p></div>
+          <div class="step rv-k"><span class="dot">06</span><h3>本地内容知识库</h3><p>素材、转录、分析一处管理，可筛选、可导出。</p></div>
+          <div class="step rv-k"><span class="dot">07</span><h3>API / MCP</h3><p>让 Claude Code、Codex 或你自己的 Agent 直接调用。</p></div>
+        </div>
+        <figure class="frame rv">
+          <img src="assets/art/pipeline-stages.webp" alt="采集、转录、分析与归档四个处理阶段" width="1200" height="686" loading="lazy" />
+          <figcaption><i></i>素材卡 → 下载与转录 → 音频/文本 → 结构化分析</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="features" class="band">
+      <div class="wrap">
+        <span class="kick rv">Capabilities</span>
+        <h2 class="rv">不是单点脚本，<br />是一套能长期运行的采集底座</h2>
+        <p class="sub rv">账号、订阅、采集、下载、转录、分析、导出、开放接口，全部在一个工作台里闭环。</p>
+        <div class="rail-hint rv"><i></i>左右滑动查看</div>
+        <div class="rail" role="list" aria-label="核心能力">
+          <article class="cap rv-k" role="listitem"><span class="tg blue">账号中心</span><h3>多平台登录态统一管理</h3><p>B站、抖音、小红书、快手、知乎、公众号，扫码或 Cookie，定时体检掉线。</p><span class="n">01</span></article>
+          <article class="cap rv-k" role="listitem"><span class="tg red">自动追更</span><h3>喜欢的博主一键跟踪</h3><p>导入关注列表，逐博主控制是否同步其名下视频，新作品自动进入素材库。</p><span class="n">02</span></article>
+          <article class="cap rv-k" role="listitem"><span class="tg yel">收藏点赞</span><h3>收藏、点赞各自独立同步</h3><p>先导入，再按需打开同步开关。不想同步哪一类就关掉，边界清楚。</p><span class="n">03</span></article>
+          <article class="cap rv-k" role="listitem"><span class="tg grn">关键词采集</span><h3>按关键词定时发现内容</h3><p>选平台、排序、单次上限和采集周期，支持热度门槛与评论抓取。</p><span class="n">04</span></article>
+        </div>
+        <div class="cap-grid">
+          <article class="mini rv-k"><span class="tg blue">本地下载</span><h3>素材落到自己的硬盘</h3><p>视频和封面下载到本地存储根，按账号与订阅组织目录。</p></article>
+          <article class="mini rv-k"><span class="tg red">转录</span><h3>本地语音转文字</h3><p>faster-whisper 生成分段与全文，视频变成可搜索文本。</p></article>
+          <article class="mini rv-k"><span class="tg yel">AI 分析</span><h3>摘要、标签、自动判类</h3><p>接任意 OpenAI 兼容模型，对转录全文做摘要与分型。</p></article>
+          <article class="mini rv-k"><span class="tg grn">爆款拆解</span><h3>看懂为什么火</h3><p>结合元数据、转录、视频理解与评论摘要，输出拆解报告。</p></article>
+          <article class="mini rv-k"><span class="tg blue">素材库</span><h3>筛选、播放、导出</h3><p>按平台、账号、分类和状态筛选，导出 Markdown 与 JSON。</p></article>
+          <article class="mini rv-k"><span class="tg red">任务队列</span><h3>排队、重试、进度可见</h3><p>下载、转录、分析、采集都有独立状态和失败原因。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="knowledge">
+      <div class="wrap">
+        <span class="kick rv">Built for AI teams</span>
+        <h2 class="rv">你的模型缺的不是算力，<br />是干净的内容数据</h2>
+        <p class="sub rv">星采把采集、下载、转录、清洗和结构化这些脏活做完，再通过 API 和 MCP 交给你自己的模型或 Agent。你决定用什么模型、数据存在哪里、哪些内容可以出内网。</p>
+        <ul class="checks">
+          <li class="rv-k"><span class="ck">✓</span><div><b>全文可检索、可引用</b><span>每条视频都有转录全文、分段、模型名和语言，文章直接存正文。</span></div></li>
+          <li class="rv-k"><span class="ck">✓</span><div><b>结构化元数据随内容留存</b><span>平台、作者、发布时间、互动指标、分类和 AI 分析结果都在库里。</span></div></li>
+          <li class="rv-k"><span class="ck">✓</span><div><b>接自己的模型，不绑定供应商</b><span>系统设置里填 OpenAI 兼容的 Base URL、模型名和 API Key 即可。</span></div></li>
+          <li class="rv-k"><span class="ck">✓</span><div><b>MCP 原生接入</b><span>Claude Code、Codex 或其他客户端可直接搜索素材、取转录、触发同步。</span></div></li>
+        </ul>
+        <figure class="frame rv">
+          <img src="assets/art/media-wall-zh.webp" alt="整齐排列的素材卡片与中文分析面板" width="1200" height="685" loading="lazy" />
+          <figcaption><i></i>每条素材都带着元数据、转录与分析结果，随时可被检索和调用</figcaption>
+        </figure>
+        <div class="code rv">
+          <div class="code-h"><i></i>~/.codex/config.toml</div>
+          <pre><span class="c-dim"># 把星采接进你的 AI 客户端</span>
+<span class="c-b">[mcp_servers.stargather]</span>
+<span class="c-k">command</span> = <span class="c-s">"uv"</span>
+<span class="c-k">args</span> = [<span class="c-s">"run"</span>, <span class="c-s">"-m"</span>, <span class="c-s">"mcp_server.server"</span>]
+<span class="c-k">cwd</span> = <span class="c-s">"/path/to/platform-api"</span>
+
+<span class="c-b">[mcp_servers.stargather.env]</span>
+<span class="c-k">PLATFORM_API_BASE</span> = <span class="c-s">"http://127.0.0.1:9100"</span>
+<span class="c-k">PLATFORM_API_KEY</span>  = <span class="c-s">"sk-你的key"</span></pre>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================== AI 接入能力 ===================== -->
+    <section id="ai-access" class="band">
+      <div class="wrap">
+        <span class="kick rv">AI access</span>
+        <h2 class="rv">AI 接入：<br />把平台交给你自己的 Agent</h2>
+        <p class="sub rv">平台对外只有一套 <code style="font:700 13px/1 var(--mono)">/api/*</code> 接口。网页工作台、MCP、外部 HTTP 客户端走的是同一套能力，没有「只有网页能做」的操作。</p>
+
+        <div class="ai-list">
+          <article class="ai rv-k">
+            <div class="hd"><span class="ico">&#8984;</span><h3>HTTP API</h3></div>
+            <p>标准 REST 接口，任何语言都能调。搜索素材、取转录全文、触发同步、跑采集、导出 Markdown / JSON。</p>
+          </article>
+          <article class="ai rv-k">
+            <div class="hd"><span class="ico">&#9672;</span><h3>MCP 原生接入</h3></div>
+            <p>本地 stdio 进程，一行配置接进 Claude Code / Codex。AI 客户端可以直接把平台当成工具用。</p>
+          </article>
+          <article class="ai rv-k">
+            <div class="hd"><span class="ico">&#9636;</span><h3>与网页同源</h3></div>
+            <p>网页里能点的，API 也能调。不会出现「这个功能只能手动操作」的黑洞。</p>
+          </article>
+        </div>
+
+        <h3 class="rv" style="margin:34px 0 0;font-size:19px;font-weight:840">API Key：按用途授权，随时可吊销</h3>
+        <div class="scope-row">
+          <div class="scope read rv-k"><span class="tag">read</span><span>查账号状态、搜素材、读转录、看数据看板、导出内容。适合只做分析的 Agent。</span></div>
+          <div class="scope rv-k"><span class="tag">operate</span><span>在只读之上，可建采集任务、触发同步、扫码登录、导入文章。适合能自己找素材的 Agent。</span></div>
+          <div class="scope admin rv-k"><span class="tag">admin</span><span>额外可改系统设置。默认不建议给常驻 Agent，留给运维账号。</span></div>
+        </div>
+
+        <div class="tools rv">
+          <span class="tool"><i></i><code>list_accounts</code></span>
+          <span class="tool"><i></i><code>check_account</code></span>
+          <span class="tool"><i></i><code>search_assets</code></span>
+          <span class="tool"><i></i><code>get_transcript</code></span>
+          <span class="tool"><i></i><code>list_followed_creators</code></span>
+          <span class="tool"><i></i><code>get_analytics</code></span>
+          <span class="tool"><i></i><code>export_assets</code></span>
+          <span class="tool op"><i></i><code>create_crawl_task</code></span>
+          <span class="tool op"><i></i><code>trigger_sync</code></span>
+          <span class="tool op"><i></i><code>start_qr_login</code></span>
+          <span class="tool op"><i></i><code>poll_qr_login</code></span>
+          <span class="tool op"><i></i><code>update_cookie</code></span>
+          <span class="tool op"><i></i><code>import_article</code></span>
+          <span class="tool op"><i></i><code>list_crawl_tasks</code></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="private" class="band">
+      <div class="wrap">
+        <span class="kick rv">Private by default</span>
+        <h2 class="rv">只在你的服务器上运行，<br />不经过我们的云</h2>
+        <p class="sub rv">星采不是一个要你注册账号的 SaaS。它交付的是一套可以自己部署、自己掌控的软件：数据库在你这里，素材在你这里，平台凭证也在你这里。</p>
+        <div class="board rv">
+          <div class="brow"><div class="k">部署方式</div><div class="v"><b>用户私有化部署。</b>不提供统一线上服务，没有共享的云端账号体系。</div></div>
+          <div class="brow"><div class="k">数据位置</div><div class="v">素材、封面、转录、分析结果全部存在<b>你自己的存储根</b>和数据库里。</div></div>
+          <div class="brow"><div class="k">凭证安全</div><div class="v">Cookie / Token 使用 <b>AES-256-GCM</b> 加密入库，密钥不进数据库、不进 git。</div></div>
+          <div class="brow"><div class="k">运行形态</div><div class="v">Docker Compose 单机部署；队列用 PostgreSQL 表，不需要 Redis 或 Celery。</div></div>
+          <div class="brow"><div class="k">模型选择</div><div class="v">接任意 OpenAI 兼容接口，也可完全离线跑本地模型，不锁定供应商。</div></div>
+        </div>
+        <ul class="checks">
+          <li class="rv-k"><span class="ck">✓</span><div><b>没有统一服务端</b><span>我们不需要、也不会收到你的账号凭证或采集数据。</span></div></li>
+          <li class="rv-k"><span class="ck">✓</span><div><b>内网 / 断网也能跑</b><span>采集、下载、转录和素材库都可在本地网络运行；模型可选本地或云端。</span></div></li>
+          <li class="rv-k"><span class="ck">✓</span><div><b>单管理员模式</b><span>没有复杂的多租户和角色体系，一台机器、一个人管理。</span></div></li>
+        </ul>
+        <figure class="frame rv">
+          <img src="assets/art/local-server.webp" alt="私有化部署：服务器、加密锁与本地归档" width="1200" height="686" loading="lazy" />
+          <figcaption><i></i>自带服务器 · 自带数据库 · 自带存储</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <span class="kick rv">FAQ</span>
+        <h2 class="rv">部署之前，<br />你可能想知道</h2>
+        <div class="faq rv">
+          <details open>
+            <summary>星采是 SaaS 吗？</summary>
+            <p>不是。星采只提供私有化部署，不提供统一线上服务，也不需要注册。你可以先<a href="/demo/">打开在线演示</a>看看完整界面与数据形态，再把它部署到自己的电脑、服务器或内网环境里。</p>
+          </details>
+          <details>
+            <summary>产品收费吗？</summary>
+            <p>产品免费。采集、下载、转录、素材库、API / MCP 都在你部署的实例里运行。AI 分析需要模型，可以接自己的 OpenAI 兼容接口，也可以用本地模型。</p>
+          </details>
+          <details>
+            <summary>需要什么运行环境？</summary>
+            <p>支持 Linux、macOS、Windows 单机部署。首选 Docker Compose，数据库用 PostgreSQL；预处理视频需要 ffmpeg，本地转录需要 faster-whisper 模型。</p>
+          </details>
+          <details>
+            <summary>它怎么拿到我的收藏和关注？</summary>
+            <p>登录你自己的平台账号后，星采通过平台原生接口或浏览器流程读取关注列表、收藏夹和作品数据。凭证 AES-256-GCM 加密存储，接口与前端只返回脱敏值。</p>
+          </details>
+          <details>
+            <summary>可以只采集关键词，不导入账号吗？</summary>
+            <p>关键词采集同样需要对应平台的登录态，因为平台接口要求已登录。你可以创建一个专用账号，只在星采里用于采集。</p>
+          </details>
+          <details>
+            <summary>评论会全部抓吗？</summary>
+            <p>不会。默认只有达到热度门槛的作品才触发评论抓取，抓取页数、条数和频率都可配置。</p>
+          </details>
+          <details>
+            <summary>能把素材喂给我自己的 Agent 吗？</summary>
+            <p>可以。在「AI 接入」页创建带权限范围的 API Key，然后通过 HTTP API 或 MCP 调用：搜索素材、取转录、触发同步、运行采集和导出。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================== 联系我们（微信） ===================== -->
+    <section id="contact" class="band">
+      <div class="wrap">
+        <span class="kick rv">Community</span>
+        <h2 class="rv">加入星采交流群，<br />一起把它用起来</h2>
+        <p class="sub rv">星采是免费、可私有化部署的项目。部署卡住了、想聊聊自己的采集场景，或者看看别人怎么用——都可以进群。产品免费，群里也没有推销。</p>
+
+        <div class="wx rv">
+          <div class="qr">
+            <img src="assets/wechat-qr.webp" alt="星采 Stargather 交流群微信二维码" width="720" height="720" loading="lazy" />
+          </div>
+          <p class="who">ai联众-王（xsai5.xyz）</p>
+          <p class="what">扫码加我 · 备注「星采」拉你进交流群</p>
+          <!-- 微信内可长按识别；其他浏览器长按只有「保存图片」，得走相册 -->
+          <span class="hint" data-hint="wechat">长按二维码，点<b>「识别图中二维码」</b></span>
+          <span class="hint" data-hint="mobile">长按保存二维码，再到微信「扫一扫 → 相册」里选它</span>
+          <div class="fallback">
+            <b>扫不出来？</b>
+            先截图或长按保存这张二维码，打开微信 <kbd>+</kbd> → <kbd>扫一扫</kbd> → 点右下角 <kbd>相册</kbd>，选中刚才那张图就能识别。
+          </div>
+        </div>
+
+        <ul class="checks">
+          <li class="rv-k"><span class="ck">1</span><div><b>扫码加我微信，备注「星采」</b><span>加好友时写一下备注，我会拉你进交流群。</span></div></li>
+          <li class="rv-k"><span class="ck">2</span><div><b>进群聊部署和使用</b><span>平台账号接入、模型配置、内网部署这些问题，群里一起讨论。</span></div></li>
+          <li class="rv-k"><span class="ck">3</span><div><b>拿到部署包和文档</b><span>GitHub 自助获取，群里也会同步更新说明。</span></div></li>
+        </ul>
+        <p class="wx-note rv">群内不欢迎广告与无关推广，只聊星采和内容采集相关的事。</p>
+      </div>
+    </section>
+
+    <section id="deploy" class="cta">
+      <div class="wrap">
+        <span class="kick rv">Get started</span>
+        <h2 class="rv">把它部署到<br />你的服务器上</h2>
+        <p class="sub rv">产品免费、可私有化部署。你可以先从 GitHub 了解项目，也可以直接联系我们沟通部署环境与平台账号接入。</p>
+        <div class="cta-acts rv">
+          <a class="btn primary" href="/demo/">先在线体验 <span class="ar">→</span></a>
+          <a class="btn" data-github href="#" rel="noopener">前往 GitHub 获取</a>
+        </div>
+        <div class="contact rv" id="contact-info">
+          <h3>联系与交流</h3>
+          <p>加我微信并备注「星采」，我会拉你进交流群。</p>
+          <div class="cline"><span class="k">GitHub</span><b><a data-github href="#" rel="noopener">github.com/lianying1716/platform-api</a></b></div>
+          <div class="cline"><span class="k">微信群</span><b><a href="#contact">加我微信 · 备注「星采」拉你进群</a></b></div>
+          <div class="cline" data-row="email" hidden><span class="k">邮箱</span><b><a data-slot="email" href="#"></a></b></div>
+          <div class="cline"><span class="k">部署方式</span><b>私有化部署 · 单机 / 内网</b></div>
+          <p class="note">部署环境、平台账号接入或模型配置有问题，可以在 GitHub 上提 Issue 联系我们。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb"><img src="assets/logo-symbol-dark.svg" alt="" width="28" height="28" />星采 Stargather</span>
+      <p>私有化内容采集与 AI 分析平台</p>
+      <nav class="fl" aria-label="页脚">
+        <a href="/demo/">在线演示</a>
+        <a data-github href="#" rel="noopener">GitHub</a>
+        <a data-nexai href="#" rel="noopener" hidden>星算</a>
+        <a href="#contact">加入交流群</a>
+        <a href="#private">私有化</a>
+        <a href="#faq">常见问题</a>
+        <a href="#deploy">获取部署</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="actionbar">
+    <div class="ab-txt">
+      <b>免费 · 私有化部署</b>
+      <span>先在线体验，再决定是否部署</span>
+    </div>
+    <a class="btn primary" href="/demo/">在线演示</a>
+  </div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script src="assets/vendor/ScrollTrigger.min.js"></script>
+  <script>
+    const SITE = {
+      github: 'https://github.com/lianying1716/platform-api',
+      email: '',
+      nexai: '',
+    }
+
+    // 微信内可长按识别；其他手机浏览器长按一般只有「保存图片」。
+    // 用 UA 区分，给对应的一句提示，避免误导。
+    ;(function detectEnv() {
+      const ua = navigator.userAgent || ''
+      document.body.classList.add(/MicroMessenger/i.test(ua) ? 'env-wechat' : 'env-mobile')
+    })()
+    document.querySelectorAll('[data-github]').forEach((el) => {
+      el.setAttribute('href', SITE.github)
+      el.setAttribute('target', '_blank')
+      el.setAttribute('rel', 'noopener noreferrer')
+    })
+    document.querySelectorAll('[data-contact]').forEach((el) => {
+      el.setAttribute('href', SITE.email ? 'mailto:' + SITE.email : '#contact-info')
+    })
+    if (SITE.email) {
+      const r = document.querySelector('[data-row="email"]'), s = document.querySelector('[data-slot="email"]')
+      if (r && s) { r.hidden = false; s.textContent = SITE.email; s.setAttribute('href', 'mailto:' + SITE.email) }
+    }
+    if (SITE.nexai) {
+      document.querySelectorAll('[data-nexai]').forEach((el) => {
+        el.hidden = false
+        el.setAttribute('href', SITE.nexai)
+        el.setAttribute('target', '_blank')
+        el.setAttribute('rel', 'noopener noreferrer')
+      })
+    }
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const hasGsap = typeof gsap !== 'undefined'
+
+    if (hasGsap && !reduce) {
+      gsap.registerPlugin(ScrollTrigger)
+
+      const bar = document.getElementById('top-bar')
+      const onScroll = () => bar.classList.toggle('solid', window.scrollY > 8)
+      window.addEventListener('scroll', onScroll, { passive: true })
+      onScroll()
+
+      const progress = document.getElementById('progress')
+      const onProgress = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight
+        const p = max > 0 ? Math.min(1, window.scrollY / max) : 0
+        progress.style.width = (p * 100).toFixed(2) + '%'
+      }
+      window.addEventListener('scroll', onProgress, { passive: true })
+      onProgress()
+
+      gsap.timeline({ defaults: { ease: 'power3.out' } })
+        .from('.hero .pill', { y: 16, opacity: 0, duration: .5 })
+        .from('.hero h1', { y: 26, opacity: 0, duration: .7 }, '-=.28')
+        .from('.hero .lead', { y: 20, opacity: 0, duration: .55 }, '-=.42')
+        .from('.hero-acts .btn', { y: 16, opacity: 0, duration: .45, stagger: .08 }, '-=.34')
+        .from('.plats .plat', { x: 14, opacity: 0, duration: .38, stagger: .05 }, '-=.26')
+
+      // 首屏由上面的时间线独占，这里必须排除，否则会被二次隐藏。
+      gsap.utils.toArray('.rv').filter((el) => !el.closest('.hero')).forEach((el) => {
+        gsap.set(el, { opacity: 0, y: 26 })
+        ScrollTrigger.create({
+          trigger: el, start: 'top 88%', once: true,
+          onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: .62, ease: 'power2.out' }),
+        })
+      })
+      // 成组揭示：按容器逐个错开。
+      // 注意：这里必须覆盖所有「父级不带动画、子级带 .rv-k」的容器，
+      // 漏掉的容器会让内容永远停在 opacity:0。
+      gsap.utils.toArray('.pains, .flow, .cap-grid, .ai-list, .scope-row').forEach((group) => {
+        const kids = Array.from(group.children)
+        gsap.set(kids, { opacity: 0, y: 22 })
+        ScrollTrigger.create({
+          trigger: group, start: 'top 86%', once: true,
+          onEnter: () => gsap.to(kids, { opacity: 1, y: 0, duration: .55, stagger: .08, ease: 'power2.out' }),
+        })
+      })
+      // 兜底：任何仍透明、但已经进入过视口的 .rv-k 直接显示。
+      // 覆盖以后新增元素却忘了加进上面清单的情况；节流到每帧最多一次。
+      let sweepQueued = false
+      const showEntered = () => {
+        if (sweepQueued) return
+        sweepQueued = true
+        requestAnimationFrame(() => {
+          sweepQueued = false
+          const vh = window.innerHeight
+          document.querySelectorAll('.rv-k').forEach((el) => {
+            const r = el.getBoundingClientRect()
+            if (r.top < vh && r.bottom > 0 && parseFloat(getComputedStyle(el).opacity) < 0.5) {
+              gsap.set(el, { opacity: 1, y: 0, x: 0 })
+            }
+          })
+        })
+      }
+      window.addEventListener('load', () => { setTimeout(showEntered, 1200); setTimeout(showEntered, 3000) })
+      window.addEventListener('scroll', showEntered, { passive: true })
+      gsap.set('.rail .cap', { opacity: 0, x: 24 })
+      ScrollTrigger.create({
+        trigger: '.rail', start: 'top 88%', once: true,
+        onEnter: () => gsap.to('.rail .cap', { opacity: 1, x: 0, duration: .5, stagger: .08, ease: 'power2.out' }),
+      })
+      gsap.utils.toArray('.checks').forEach((ul) => {
+        gsap.set(ul.children, { opacity: 0, y: 18 })
+        ScrollTrigger.create({
+          trigger: ul, start: 'top 88%', once: true,
+          onEnter: () => gsap.to(ul.children, { opacity: 1, y: 0, duration: .5, stagger: .07, ease: 'power2.out' }),
+        })
+      })
+      gsap.to('.pill i', { opacity: .25, duration: .9, repeat: -1, yoyo: true, ease: 'sine.inOut' })
+      gsap.utils.toArray('.frame img').forEach((img) => {
+        gsap.fromTo(img, { yPercent: -2 }, {
+          yPercent: 2, ease: 'none',
+          scrollTrigger: { trigger: img.closest('.frame'), start: 'top bottom', end: 'bottom top', scrub: .7 },
+        })
+      })
+      window.addEventListener('load', () => ScrollTrigger.refresh())
+      window.addEventListener('orientationchange', () => setTimeout(() => ScrollTrigger.refresh(), 300))
+
+      // 兜底：只修复「已经进入过视口、却仍透明」的元素。
+      // 不能无条件全部显示，否则会把首屏以下的滚动揭示效果一起抹掉。
+      const failsafe = () => {
+        const vh = window.innerHeight
+        document.querySelectorAll('.rv, .rv-k, .rail .cap, .checks li, .pains > *, .flow > *, .cap-grid > *')
+          .forEach((el) => {
+            const r = el.getBoundingClientRect()
+            const entered = r.top < vh && r.bottom > 0
+            if (entered && parseFloat(getComputedStyle(el).opacity) < 0.5) {
+              gsap.set(el, { opacity: 1, y: 0, x: 0 })
+            }
+          })
+      }
+      window.addEventListener('load', () => {
+        setTimeout(failsafe, 1200)
+        setTimeout(failsafe, 3000)
+      })
+      window.addEventListener('pageshow', () => setTimeout(failsafe, 1200))
+    } else {
+      document.querySelectorAll('.rv, .rv-k, .rail .cap, .checks li, .pains > *, .flow > *, .cap-grid > *')
+        .forEach((el) => { el.style.opacity = 1 })
+    }
+  </script>
+
+</body>
+</html>

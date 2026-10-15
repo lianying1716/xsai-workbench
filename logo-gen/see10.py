@@ -1,5 +1,5 @@
 import os, sys
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/platform-api/docs/brand/logo/tools")
+sys.path.insert(0, "/path/to/platform-api/docs/brand/logo/tools")
 from see import ask
 Q = """你是资深品牌设计总监，正在评审一款名为「星采 Stargather」的中文创作者工具的品牌 logo 概念图。
 品牌内涵：星采 = 采星（把散落的星光采集收拢），调性要求：星空、诗意、浪漫、精致、克制。

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 调星算 images API 生成图并下载（该服务返回 URL 而非 b64，官方 CLI 不兼容）
 set -euo pipefail
-KEY=$(cat /tmp/xk)
+KEY=$(cat /path/to/api-key)
 API=https://api.xsai5.xyz/v1/images/generations
 gen() {  # gen <out.png> <model> <size> <prompt>
   local out="$1" model="$2" size="$3" prompt="$4"

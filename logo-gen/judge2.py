@@ -1,5 +1,5 @@
 import os, sys
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/logo-gen")
+sys.path.insert(0, "/path/to/xsai-workbench/logo-gen")
 from see import ask
 Q = """你是资深品牌设计总监。评审这张 logo 概念图，用于产品"星采"（自媒体创作的自动化素材管理加工工具，面向中文创作者）。
 要求：简洁、几何、有力量感、缩到 16px 仍辨识、不花哨、不能像通用图标库的现成符号。

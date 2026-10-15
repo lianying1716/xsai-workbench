@@ -1,6 +1,6 @@
 """把生成的图发给带视觉的模型，让它描述/评审 —— 无图像能力时的"眼睛"。"""
 import base64, json, subprocess, sys, os, tempfile
-KEY = open("/tmp/xk").read().strip()
+KEY = open("/path/to/api-key").read().strip()
 API = "https://api.xsai5.xyz/v1/chat/completions"
 
 def ask(img_path, question, model="qwen3.8-flash", max_side=768):

@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>星采 Stargather · 把收藏的视频，变成你自己的内容知识库</title>
+  <meta name="description" content="星采 Stargather 是免费、可私有化部署的多平台内容采集与 AI 分析平台。喜欢的博主自动追更，收藏、点赞、关键词定时采集，自动下载、转录、拆解，再通过 API / MCP 接入你自己的模型。" />
+  <meta name="theme-color" content="#f5f0e6" />
+  <meta property="og:title" content="星采 Stargather · 把收藏的视频，变成你自己的内容知识库" />
+  <meta property="og:description" content="免费私有化部署。抖音、B站、小红书、快手、知乎、公众号内容自动归集、下载、转录、AI 分析，数据留在你自己的服务器。" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/logo-symbol.svg" />
+  <script>
+    // 手机访问时自动切到 H5 移动页；?pc=1 可在手机上强制查看桌面版。
+    (function () {
+      try {
+        var q = location.search
+        if (q.indexOf('pc=1') !== -1) return
+        var narrow = window.matchMedia('(max-width: 760px)').matches
+        var touch = window.matchMedia('(pointer: coarse)').matches
+        var ua = /Android|iPhone|iPad|iPod|HarmonyOS|Mobile|MicroMessenger/i.test(navigator.userAgent)
+        if ((narrow && touch) || (ua && narrow)) location.replace('mobile.html' + q)
+      } catch (e) {}
+    })()
+  </script>
+  <script>
+    // 在首帧前判定动效可用性：避免「先显示、再隐藏、再动效进场」的闪烁。
+    // GSAP 与 ScrollTrigger 已随站点本地打包，脚本加载失败时也会自动回退为静态展示。
+    (function () {
+      try {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!reduce) document.documentElement.classList.add('js')
+      } catch (e) {}
+    })()
+  </script>
+  <style>
+    /* ============================================================
+       Tokens
+       ============================================================ */
+    :root {
+      --paper: #f5f0e6;
+      --paper-2: #ece5d6;
+      --card: #fffdf8;
+      --ink: #16151a;
+      --ink-2: #3b393f;
+      --muted: #6d685f;
+      --faint: #969083;
+      --line: #16151a;
+      --line-soft: #d5ccb9;
+      --red: #c13a2c;
+      --red-deep: #98251b;
+      --blue: #2249c9;
+      --yellow: #eeb51b;
+      --green: #1e7a4d;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      --sh: 5px 5px 0 var(--ink);
+      --sh-sm: 3px 3px 0 var(--ink);
+      --wrap: 1200px;
+      --nav-h: 70px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.65;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: .5;
+      background-image: radial-gradient(color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px);
+      background-size: 4px 4px;
+      mix-blend-mode: multiply;
+    }
+    a { color: inherit; }
+    img, svg { max-width: 100%; display: block; }
+    [hidden] { display: none !important; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+    ::selection { background: var(--yellow); color: var(--ink); }
+
+    .wrap { width: min(var(--wrap), calc(100% - 48px)); margin: 0 auto; position: relative; z-index: 2; }
+    section[id], #top { scroll-margin-top: calc(var(--nav-h) + 10px); }
+
+    /* ============================================================
+       Nav
+       ============================================================ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 60;
+      height: var(--nav-h);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(12px) saturate(1.2);
+      border-bottom: 2px solid transparent;
+      transition: border-color .25s ease, background .25s ease;
+    }
+    .nav.solid { border-bottom-color: var(--ink); background: color-mix(in srgb, var(--paper) 96%, transparent); }
+    .nav-in { height: 100%; display: flex; align-items: center; gap: 30px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; flex: none; }
+    .brand-mark {
+      width: 38px; height: 38px; flex: none;
+      border: 2px solid var(--ink);
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .brand:hover .brand-mark { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+    .brand-txt { display: flex; flex-direction: column; line-height: 1.02; }
+    .brand-txt b { font-size: 17.5px; letter-spacing: .01em; }
+    .brand-txt span { font: 800 9.5px/1 var(--font); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+    .nav-links { display: flex; gap: 26px; margin-left: auto; }
+    .nav-links a {
+      position: relative; font-size: 14px; font-weight: 650; text-decoration: none; color: var(--ink-2);
+      padding: 4px 0;
+    }
+    .nav-links a::after {
+      content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 2px; background: var(--red);
+      transition: right .22s cubic-bezier(.4,0,.2,1);
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a:hover::after { right: 0; }
+    .nav-act { display: flex; gap: 10px; flex: none; }
+
+    /* ============================================================
+       Buttons
+       ============================================================ */
+    .btn {
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 46px; padding: 0 22px;
+      border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+      font: 750 14.5px/1 var(--font); text-decoration: none; cursor: pointer;
+      transition: transform .13s ease, box-shadow .13s ease, background .13s ease, color .13s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translate(-2px,-2px); box-shadow: var(--sh-sm); }
+    .btn:active { transform: translate(1px,1px); box-shadow: none; }
+    .btn .ar { transition: transform .18s ease; }
+    .btn:hover .ar { transform: translateX(3px); }
+    .btn.primary { background: var(--red); color: #fff; }
+    .btn.primary:hover { background: var(--red-deep); }
+    .btn.ink { background: var(--ink); color: #fff; }
+    .btn.sm { min-height: 40px; padding: 0 16px; font-size: 13.5px; }
+    .btn.lg { min-height: 54px; padding: 0 28px; font-size: 15.5px; }
+
+    /* ============================================================
+       Reveal (GSAP-driven; CSS fallback keeps content visible)
+       ============================================================ */
+    .js .rv { opacity: 0; }
+
+    /* ============================================================
+       Hero
+       ============================================================ */
+    .hero { position: relative; padding: calc(var(--nav-h) + 66px) 0 90px; overflow: hidden; }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(900px 480px at 88% 12%, color-mix(in srgb, var(--yellow) 26%, transparent), transparent 68%),
+        radial-gradient(680px 420px at 6% 96%, color-mix(in srgb, var(--blue) 12%, transparent), transparent 70%);
+    }
+    .hero-bar {
+      position: absolute; top: var(--nav-h); left: 0; right: 0; height: 7px; z-index: 3;
+      background: linear-gradient(90deg, var(--red) 0 33.4%, var(--blue) 33.4% 66.7%, var(--yellow) 66.7% 100%);
+      border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 58px; align-items: center; }
+    .hero-grid > * { min-width: 0; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 8px 14px; border: 2px solid var(--ink); background: var(--card);
+      box-shadow: var(--sh-sm); font: 750 12.5px/1 var(--font); letter-spacing: .03em;
+    }
+    .pill .pulse { width: 9px; height: 9px; background: var(--green); border: 1.5px solid var(--ink); border-radius: 50%; }
+
+    h1 {
+      margin: 26px 0 0;
+      font-size: clamp(40px, 5vw, 68px);
+      line-height: 1.06;
+      letter-spacing: -.015em;
+      font-weight: 880;
+    }
+    h1 .hl { position: relative; color: var(--red); white-space: nowrap; }
+    h1 .hl::after {
+      content: ""; position: absolute; left: -2px; right: -2px; bottom: .06em; height: .28em;
+      background: color-mix(in srgb, var(--yellow) 78%, transparent); z-index: -1;
+    }
+    .hero-lead { margin: 24px 0 0; max-width: 54ch; font-size: 17.5px; line-height: 1.82; color: var(--ink-2); }
+    .hero-lead b { color: var(--ink); font-weight: 750; }
+    .hero-act { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 32px; }
+
+    .plat-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+      margin-top: 30px; padding-top: 22px; border-top: 1.5px dashed var(--line-soft);
+    }
+    .plat-row .pr-l { font: 700 12px/1 var(--mono); letter-spacing: .06em; color: var(--faint); text-transform: uppercase; }
+    .plat { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13.5px; color: var(--ink-2); }
+    .plat svg { width: 19px; height: 19px; flex: none; }
+    .plat:hover { color: var(--ink); }
+
+    /* Hero visual */
+    .hero-vis { position: relative; }
+    .hero-art {
+      position: absolute; right: -6%; top: -12%; width: 128%; z-index: 0;
+      opacity: .96; pointer-events: none;
+      mix-blend-mode: multiply;
+    }
+    .app {
+      position: relative; z-index: 1;
+      border: 2.5px solid var(--ink); background: var(--card);
+      box-shadow: 10px 10px 0 var(--ink);
+      overflow: hidden;
+      transform: translateZ(0);
+    }
+    .app-bar { display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 13px; background: var(--ink); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; border: 1.2px solid rgba(255,255,255,.6); }
+    .dot.r { background: #e2604f; } .dot.y { background: #e9bf4e; } .dot.g { background: #5fbd7d; }
+    .app-url { margin-left: 10px; font: 600 11px/1 var(--mono); color: rgba(255,255,255,.66); }
+    .app-body { display: grid; grid-template-columns: 138px 1fr; min-height: 402px; }
+    .app-side { border-right: 2px solid var(--ink); background: var(--paper-2); padding: 13px 10px; }
+    .side-i { display: flex; align-items: center; gap: 8px; padding: 7.5px 9px; margin-bottom: 3px; font-size: 12px; font-weight: 650; color: var(--ink-2); }
+    .side-i .sq { width: 7px; height: 7px; border: 1.4px solid currentColor; flex: none; }
+    .side-i.on { background: var(--ink); color: #fff; }
+    .app-main { padding: 17px 17px 15px; min-width: 0; }
+    .app-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 13px; }
+    .app-head b { font-size: 15.5px; }
+    .live { display: inline-flex; align-items: center; gap: 5px; font: 700 10.5px/1 var(--mono); color: var(--green); }
+    .live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+    .crt {
+      display: grid; grid-template-columns: 36px 1fr auto; gap: 11px; align-items: center;
+      padding: 10px 11px; border: 1.6px solid var(--ink); background: var(--card); margin-bottom: 8px;
+    }
+    .av { width: 36px; height: 36px; display: grid; place-items: center; border: 1.6px solid var(--ink); font-weight: 850; font-size: 13.5px; }
+    .av.y { background: var(--yellow); } .av.b { background: #cfe0ff; } .av.g { background: #c7ecd5; } .av.r { background: #f6cfc9; }
+    .crt .nm { font-size: 13px; font-weight: 760; line-height: 1.2; }
+    .crt .mt { font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+    .sw { width: 40px; height: 21px; border: 1.6px solid var(--ink); background: var(--paper-2); position: relative; flex: none; }
+    .sw::after { content: ""; position: absolute; top: 1.6px; left: 1.6px; width: 15px; height: 15px; background: var(--ink); }
+    .sw.on { background: var(--green); }
+    .sw.on::after { left: 20px; background: #fff; }
+    .app-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin-top: 13px; }
+    .st { border: 1.6px solid var(--ink); padding: 9px 8px; background: var(--paper-2); }
+    .st b { display: block; font: 820 18px/1 var(--mono); }
+    .st span { font-size: 10px; color: var(--muted); }
+
+    /* ============================================================
+       Sections
+       ============================================================ */
+    section { position: relative; padding: 88px 0; }
+    .band { background: var(--card); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+    .band::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
+                        linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent 100%);
+    }
+    .sec-head { max-width: 780px; }
+    .kick { display: inline-flex; align-items: center; gap: 9px; font: 800 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+    .kick::before { content: ""; width: 22px; height: 3px; background: var(--red); }
+    h2 { margin: 14px 0 0; font-size: clamp(29px, 3.3vw, 44px); line-height: 1.16; letter-spacing: -.012em; font-weight: 850; }
+    h2 .hl { color: var(--red); }
+    .sec-sub { margin: 16px 0 0; color: var(--ink-2); font-size: 16.5px; max-width: 62ch; }
+
+    /* Pain */
+    .pain-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 42px; }
+    .pain {
+      position: relative; border: 2px solid var(--ink); background: var(--card); padding: 26px 24px;
+      box-shadow: var(--sh-sm); overflow: hidden;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .pain:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--ink); }
+    .pain::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+    .pain:nth-child(1)::before { background: var(--red); }
+    .pain:nth-child(2)::before { background: var(--blue); }
+    .pain:nth-child(3)::before { background: var(--yellow); }
+    .pain .no { font: 850 13px/1 var(--mono); color: var(--faint); letter-spacing: .08em; }
+    .pain h3 { margin: 16px 0 9px; font-size: 20px; line-height: 1.3; }
+    .pain p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+    .pain .ico { position: absolute; right: 16px; top: 18px; font-size: 30px; opacity: .1; font-weight: 900; }
+
+    /* Pipeline */
+    .flow-wrap { margin-top: 46px; border: 2px solid var(--ink); background: var(--card); box-shadow: var(--sh); }
+    .flow { display: grid; grid-template-columns: repeat(7,1fr); }
+    .step { position: relative; padding: 22px 15px 24px; border-right: 1.6px solid var(--ink); min-height: 172px; }
+    .step:last-child { border-right: 0; background: var(--ink); color: #fff; }
+    .step .sn { font: 820 11px/1 var(--mono); color: var(--red); }
+    .step:last-child .sn { color: var(--yellow); }
+    .step h3 { margin: 34px 0 7px; font-size: 14.5px; line-height: 1.28; }
+    .step p { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--muted); }
+    .step:last-child p { color: rgba(255,255,255,.72); }
+    .step .ar { position: absolute; right: -10px; top: 20px; width: 18px; height: 18px; display: grid; place-items: center; background: var(--paper); border: 1.6px solid var(--ink); font: 850 11px/1 var(--mono); z-index: 2; }
+    .step:last-child .ar { display: none; }
+
+    /* Capabilities */
+    .cap-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 44px; }
+    .cap {
+      position: relative; border: 1.8px solid var(--ink); background: var(--card); padding: 20px 18px 22px;
+      min-height: 158px; overflow: hidden;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .cap:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--ink); }
+    .cap .tg { display: inline-block; padding: 4px 8px; border: 1.4px solid var(--ink); font: 760 10px/1 var(--mono); letter-spacing: .04em; }
+    .tg.red { background: #f7d6d1; } .tg.blue { background: #d9e2ff; } .tg.yel { background: #fbe7b4; } .tg.grn { background: #cdebd8; }
+    .cap h3 { margin: 15px 0 7px; font-size: 16px; line-height: 1.3; }
+    .cap p { margin: 0; color: var(--muted); font-size: 12.8px; line-height: 1.62; }
+    .cap .big { position: absolute; right: -6px; bottom: -16px; font: 900 66px/1 var(--mono); color: color-mix(in srgb, var(--ink) 5%, transparent); pointer-events: none; }
+
+    /* Split */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 58px; align-items: center; }
+    .split > * { min-width: 0; }
+    .split.rev .vis { order: 2; }
+    .check { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 16px; }
+    .check li { display: grid; grid-template-columns: 24px 1fr; gap: 13px; }
+    .check .ck { width: 24px; height: 24px; border: 2px solid var(--ink); background: var(--yellow); display: grid; place-items: center; font: 900 13px/1 var(--mono); }
+    .check b { display: block; font-size: 15.5px; }
+    .check span { color: var(--muted); font-size: 13.8px; }
+
+    .art-frame { position: relative; border: 2.5px solid var(--ink); background: var(--card); box-shadow: var(--sh); overflow: hidden; }
+    .art-frame img { width: 100%; height: auto; }
+    .art-cap { display: flex; align-items: center; gap: 9px; padding: 12px 15px; border-top: 2px solid var(--ink); background: var(--paper-2); font: 700 12px/1 var(--mono); color: var(--muted); }
+    .art-cap i { width: 8px; height: 8px; background: var(--red); border: 1.4px solid var(--ink); flex: none; }
+
+    /* 段落级插画：单独一条，横贯版心 */
+    .art-band { margin-top: 44px; }
+    .art-band .art-frame { box-shadow: 8px 8px 0 var(--ink); }
+
+    /* Code */
+    .code { border: 2.5px solid var(--ink); background: #141319; color: #ece7dd; box-shadow: var(--sh); overflow: hidden; max-width: 100%; }
+    .code-h { display: flex; align-items: center; gap: 8px; padding: 11px 15px; border-bottom: 1.6px solid #38353f; font: 700 11.5px/1 var(--mono); color: #aea79c; }
+    .code-h i { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+    pre { margin: 0; padding: 20px 17px; max-width: 100%; overflow-x: auto; font: 12.8px/1.8 var(--mono); white-space: pre; }
+    .c-dim { color: #857e73; } .c-k { color: #ffb96d; } .c-s { color: #9ee8a9; } .c-b { color: #86b8ff; }
+
+    /* AI 接入能力矩阵 */
+    .ai-block { margin-top: 62px; }
+    .ai-head { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+    .ai-head h3 { margin: 0; font-size: 25px; line-height: 1.25; font-weight: 840; letter-spacing: -.008em; }
+    .ai-head p { margin: 0; flex: 1; min-width: 260px; color: var(--ink-2); font-size: 15px; }
+    .ai-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 30px; }
+    .ai-card { border: 1.8px solid var(--ink); background: var(--card); padding: 22px 20px 24px; position: relative; transition: transform .16s ease, box-shadow .16s ease; }
+    .ai-card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--ink); }
+    .ai-card .ico {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border: 1.8px solid var(--ink); background: var(--paper-2);
+      font: 800 15px/1 var(--mono); margin-bottom: 15px;
+    }
+    .ai-card h4 { margin: 0 0 8px; font-size: 16.5px; line-height: 1.32; }
+    .ai-card p { margin: 0; color: var(--muted); font-size: 13.2px; line-height: 1.68; }
+    .ai-card code {
+      font: 700 12px/1.5 var(--mono); background: var(--paper-2);
+      border: 1.4px solid var(--ink); padding: 1px 5px;
+    }
+
+    /* 14 个工具清单 */
+    .tool-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 26px; }
+    .tool {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 13px; border: 1.6px solid var(--ink); background: var(--card);
+      font-size: 13px; font-weight: 650;
+    }
+    .tool i { width: 6px; height: 6px; background: var(--green); border: 1.2px solid var(--ink); flex: none; }
+    .tool.op i { background: var(--yellow); }
+    .tool code { font: 700 11.5px/1 var(--mono); }
+
+    /* Trust board */
+    .board { border: 2.5px solid var(--ink); background: var(--card); box-shadow: var(--sh); }
+    .brow { display: grid; grid-template-columns: 156px 1fr; border-bottom: 1.6px solid var(--ink); }
+    .brow:last-child { border-bottom: 0; }
+    .bk { padding: 16px; background: var(--paper-2); border-right: 1.6px solid var(--ink); font: 800 12px/1.4 var(--mono); }
+    .bv { padding: 16px; font-size: 13.8px; color: var(--ink-2); }
+    .bv b { color: var(--ink); }
+
+    /* FAQ */
+    .faq { margin-top: 40px; border-top: 2px solid var(--ink); }
+    details { border-bottom: 1.6px solid var(--line-soft); }
+    summary { cursor: pointer; list-style: none; padding: 21px 46px 21px 0; font-size: 17px; font-weight: 760; position: relative; transition: color .16s ease; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; position: absolute; right: 8px; top: 17px; font: 800 24px/1 var(--mono); color: var(--red); transition: transform .2s ease; }
+    details[open] summary { color: var(--red); }
+    details[open] summary::after { content: "−"; }
+    summary:hover { color: var(--red); }
+    details p { margin: 0 0 24px; max-width: 80ch; color: var(--ink-2); font-size: 14.8px; }
+
+    /* CTA */
+    .cta { background: var(--ink); color: #fff; border-top: 9px solid var(--red); overflow: hidden; }
+    .cta::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .07;
+      background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 22px 22px;
+    }
+    .cta-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 54px; align-items: center; }
+    .cta h2 { color: #fff; }
+    .cta .sec-sub { color: rgba(255,255,255,.76); }
+    .cta .kick { color: var(--yellow); } .cta .kick::before { background: var(--yellow); }
+    .cta-act { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 30px; }
+    .cta .btn { border-color: #fff; background: transparent; color: #fff; }
+    .cta .btn.primary { background: var(--red); border-color: var(--red); }
+    .cta .btn:hover { box-shadow: 5px 5px 0 rgba(255,255,255,.34); }
+    .contact { border: 2.5px solid #fff; background: rgba(255,255,255,.06); padding: 26px; backdrop-filter: blur(4px); }
+    .contact h3 { margin: 0 0 7px; font-size: 19px; }
+    .contact > p { margin: 0 0 19px; color: rgba(255,255,255,.7); font-size: 13.2px; }
+    .cline { display: grid; grid-template-columns: 78px 1fr; gap: 11px; padding: 11px 0; border-top: 1px solid rgba(255,255,255,.22); font-size: 13.8px; }
+    .cline span { color: rgba(255,255,255,.6); }
+    .cline b { font-weight: 650; word-break: break-all; }
+    .note { margin: 17px 0 0; color: rgba(255,255,255,.6); font-size: 12.6px; line-height: 1.65; }
+
+    /* 联系我们 · 微信二维码 */
+    .wx-band { background: var(--paper); }
+    .wx-grid { display: grid; grid-template-columns: 1fr auto; gap: 56px; align-items: center; }
+    .wx-grid > * { min-width: 0; }
+    .wx-steps { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 14px; }
+    .wx-steps li { display: grid; grid-template-columns: 26px 1fr; gap: 13px; align-items: start; }
+    .wx-steps .n {
+      width: 26px; height: 26px; display: grid; place-items: center;
+      border: 2px solid var(--ink); background: var(--yellow);
+      font: 800 12px/1 var(--mono);
+    }
+    .wx-steps b { display: block; font-size: 15px; }
+    .wx-steps span { display: block; color: var(--muted); font-size: 13.4px; }
+    .wx-note {
+      margin: 20px 0 0; padding-left: 13px;
+      border-left: 3px solid var(--line-soft);
+      color: var(--faint); font-size: 12.6px; line-height: 1.7;
+    }
+
+    .wx-card {
+      border: 2.5px solid var(--ink); background: var(--card); box-shadow: 8px 8px 0 var(--ink);
+      padding: 22px 22px 18px; text-align: center; width: 322px;
+    }
+    .wx-card .qr-wrap { border: 2px solid var(--ink); background: #fff; padding: 12px; }
+    .wx-card .qr-wrap img { width: 100%; height: auto; display: block; image-rendering: pixelated; }
+    .wx-card .who { margin: 15px 0 3px; font-size: 15.5px; font-weight: 780; }
+    .wx-card .what { margin: 0; color: var(--muted); font-size: 12.6px; }
+    .wx-card .scan-hint {
+      display: none; align-items: center; justify-content: center; gap: 7px;
+      margin-top: 13px; padding: 9px 12px;
+      border: 1.6px dashed var(--red); background: color-mix(in srgb, var(--red) 7%, transparent);
+      color: var(--red); font-size: 12.6px; font-weight: 720;
+      text-align: center; line-height: 1.55;
+    }
+    /* 默认（JS 未执行时）按电脑端处理：让访客用手机扫 */
+    .wx-card .scan-hint[data-hint="desktop"] { display: flex; }
+    body.env-wechat .wx-card .scan-hint[data-hint="desktop"],
+    body.env-mobile .wx-card .scan-hint[data-hint="desktop"] { display: none; }
+    body.env-wechat .wx-card .scan-hint[data-hint="wechat"] { display: flex; }
+    body.env-mobile .wx-card .scan-hint[data-hint="mobile"] { display: flex; }
+    .wx-card .scan-hint b { font-weight: 800; }
+    /* 兜底步骤：只对手机用户有意义（保存图片 → 微信扫一扫 → 相册）。
+       电脑上没法用自己摄像头扫自己屏幕，所以桌面端不显示。 */
+    .wx-card .fallback {
+      display: none;
+      margin: 14px 0 0; padding-top: 13px; border-top: 1.5px dashed var(--line-soft);
+      text-align: left; color: var(--muted); font-size: 12.4px; line-height: 1.7;
+    }
+    body.env-wechat .wx-card .fallback,
+    body.env-mobile .wx-card .fallback { display: block; }
+    .wx-card .fallback b { display: block; color: var(--ink); font-size: 12.8px; margin-bottom: 4px; }
+    .wx-card .fallback kbd {
+      display: inline-block; padding: 1px 6px; margin: 0 1px;
+      border: 1.3px solid var(--ink); background: var(--paper-2);
+      font: 700 11.5px/1.6 var(--mono);
+    }
+
+    /* Footer */
+    footer { background: var(--paper); border-top: 2px solid var(--ink); padding: 36px 0 48px; }
+    .foot { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+    .fb { display: flex; align-items: center; gap: 11px; font-weight: 820; }
+    .fb img { width: 30px; height: 30px; border: 1.6px solid var(--ink); }
+    .foot p { margin: 0; color: var(--muted); font-size: 12.8px; }
+    .fl { margin-left: auto; display: flex; flex-wrap: wrap; gap: 20px; font-size: 13.2px; }
+    .fl a { text-decoration: none; color: var(--ink-2); }
+    .fl a:hover { color: var(--red); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 1100px) {
+      .nav-links { display: none; }
+      .hero-grid, .split, .cta-grid { grid-template-columns: 1fr; gap: 46px; }
+      .wx-grid { grid-template-columns: 1fr; gap: 38px; }
+      .wx-card { width: min(322px, 100%); margin: 0 auto; }
+      .ai-grid { grid-template-columns: repeat(2, 1fr); }
+      .split.rev .vis { order: 0; }
+      .hero-art { width: 100%; right: 0; top: -6%; opacity: .5; }
+      .flow { grid-template-columns: repeat(2,1fr); }
+      .step { border-bottom: 1.6px solid var(--ink); }
+      .step:nth-child(2n) { border-right: 0; }
+      .step .ar { display: none; }
+      .cap-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 720px) {
+      :root { --nav-h: 62px; }
+      .wrap { width: calc(100% - 34px); }
+      .nav-in { gap: 12px; }
+      .nav-act .btn:not(.primary) { display: none; }
+      .brand-txt span { display: none; }
+      .hero { padding-top: calc(var(--nav-h) + 40px); padding-bottom: 62px; }
+      .hero::after { background: radial-gradient(560px 320px at 80% 6%, color-mix(in srgb, var(--yellow) 24%, transparent), transparent 70%); }
+      section { padding: 62px 0; }
+      .pain-grid, .cap-grid, .flow { grid-template-columns: 1fr; }
+      .ai-grid { grid-template-columns: 1fr; }
+      .ai-head { gap: 10px; }
+      .ai-head h3 { font-size: 21px; }
+      .step { border-right: 0; min-height: 0; padding: 16px 16px 18px; }
+      .step h3 { margin-top: 15px; }
+      .app-body { grid-template-columns: 1fr; }
+      .app-side { display: none; }
+      .app-strip { grid-template-columns: repeat(2,1fr); }
+      .brow { grid-template-columns: 1fr; }
+      .bk { border-right: 0; border-bottom: 1.6px solid var(--ink); }
+      .hero-act .btn, .cta-act .btn { width: 100%; }
+      .fl { margin-left: 0; }
+      h1 { letter-spacing: -.01em; }
+      .cline { grid-template-columns: 1fr; gap: 3px; }
+      .cline span { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+      /* 手机上二维码没法「扫屏幕」，放大二维码便于长按保存 */
+      .wx-card .qr-wrap img { width: min(230px, 62vw); margin: 0 auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .btn, .pain, .cap, summary::after { transition: none !important; }
+      .js .rv { opacity: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- reusable platform glyphs -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="p-douyin" viewBox="0 0 24 24"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02c.08 1.53.63 3.09 1.75 4.17c1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97c-.57-.26-1.1-.59-1.62-.93c-.01 2.92.01 5.84-.02 8.75c-.08 1.4-.54 2.79-1.35 3.94c-1.31 1.92-3.58 3.17-5.91 3.21c-1.43.08-2.86-.31-4.08-1.03c-2.02-1.19-3.44-3.37-3.65-5.71c-.02-.5-.03-1-.01-1.49c.18-1.9 1.12-3.72 2.58-4.96c1.66-1.44 3.98-2.13 6.15-1.72c.02 1.48-.04 2.96-.04 4.44c-.99-.32-2.15-.23-3.02.37c-.63.41-1.11 1.04-1.36 1.75c-.21.51-.15 1.07-.14 1.61c.24 1.64 1.82 3.02 3.5 2.87c1.12-.01 2.19-.66 2.77-1.61c.19-.33.4-.67.41-1.06c.1-1.79.06-3.57.07-5.36c.01-4.03-.01-8.05.02-12.07"/></symbol>
+      <symbol id="p-bilibili" viewBox="0 0 24 24"><path fill="currentColor" d="M17.813 4.653h.854q2.266.08 3.773 1.574Q23.946 7.72 24 9.987v7.36q-.054 2.266-1.56 3.773c-1.506 1.507-2.262 1.524-3.773 1.56H5.333q-2.266-.054-3.773-1.56C.053 19.614.036 18.858 0 17.347v-7.36q.054-2.267 1.56-3.76t3.773-1.574h.774l-1.174-1.12a1.23 1.23 0 0 1-.373-.906q0-.534.373-.907l.027-.027q.4-.373.92-.373t.92.373L9.653 4.44q.107.106.187.213h4.267a.8.8 0 0 1 .16-.213l2.853-2.747q.4-.373.92-.373c.347 0 .662.151.929.4s.391.551.391.907q0 .532-.373.906zM5.333 7.24q-1.12.027-1.88.773q-.76.748-.786 1.894v7.52q.026 1.146.786 1.893t1.88.773h13.334q1.12-.026 1.88-.773t.786-1.893v-7.52q-.026-1.147-.786-1.894t-1.88-.773z"/><circle cx="9.3" cy="13.4" r="1.35" fill="currentColor"/><circle cx="14.7" cy="13.4" r="1.35" fill="currentColor"/></symbol>
+      <symbol id="p-xhs" viewBox="0 0 24 24"><path fill="currentColor" d="M22.405 9.879c.002.016.01.02.07.019h.725a.797.797 0 0 0 .78-.972a.794.794 0 0 0-.884-.618a.795.795 0 0 0-.692.794c0 .101-.002.666.001.777m-11.509 4.808c-.203.001-1.353.004-1.685.003a2.5 2.5 0 0 1-.766-.126a.025.025 0 0 0-.03.014L7.7 16.127a.025.025 0 0 0 .01.032c.111.06.336.124.495.124c.66.01 1.32.002 1.981 0q.017 0 .023-.015l.712-1.545a.025.025 0 0 0-.024-.036zM.477 9.91c-.071 0-.076.002-.076.01l-.01.08c-.027.397-.038.495-.234 3.06c-.012.24-.034.389-.135.607c-.026.057-.033.042.003.112c.046.092.681 1.523.787 1.74c.008.015.011.02.017.02c.008 0 .033-.026.047-.044q.219-.282.371-.606c.306-.635.44-1.325.486-1.706c.014-.11.021-.22.03-.33l.204-2.616l.022-.293c.003-.029 0-.033-.03-.034zm7.203 3.757a1.4 1.4 0 0 1-.135-.607c-.004-.084-.031-.39-.235-3.06a.4.4 0 0 0-.01-.082c-.004-.011-.052-.008-.076-.008h-1.48c-.03.001-.034.005-.03.034l.021.293q.114 1.473.233 2.946c.05.4.186 1.085.487 1.706c.103.215.223.419.37.606c.015.018.037.051.048.049c.02-.003.742-1.642.804-1.765c.036-.07.03-.055.003-.112m3.861-.913h-.872a.126.126 0 0 1-.116-.178l1.178-2.625a.025.025 0 0 0-.023-.035l-1.318-.003a.148.148 0 0 1-.135-.21l.876-1.954a.025.025 0 0 0-.023-.035h-1.56q-.017 0-.024.015l-.926 2.068c-.085.169-.314.634-.399.938a.5.5 0 0 0-.02.191a.46.46 0 0 0 .23.378a1 1 0 0 0 .46.119h.59c.041 0-.688 1.482-.834 1.972a.5.5 0 0 0-.023.172a.47.47 0 0 0 .23.398c.15.092.342.12.475.12l1.66-.001q.017 0 .023-.015l.575-1.28a.025.025 0 0 0-.024-.035m-6.93-4.937H3.1a.032.032 0 0 0-.034.033c0 1.048-.01 2.795-.01 6.829c0 .288-.269.262-.28.262h-.74c-.04.001-.044.004-.04.047c.001.037.465 1.064.555 1.263c.01.02.03.033.051.033c.157.003.767.009.938-.014c.153-.02.3-.06.438-.132c.3-.156.49-.419.595-.765c.052-.172.075-.353.075-.533q.003-3.495-.007-6.991a.03.03 0 0 0-.032-.032zm11.784 6.896q-.002-.02-.024-.022h-1.465c-.048-.001-.049-.002-.05-.049v-4.66c0-.072-.005-.07.07-.07h.863c.08 0 .075.004.075-.074V8.393c0-.082.006-.076-.08-.076h-3.5c-.064 0-.075-.006-.075.073v1.445c0 .083-.006.077.08.077h.854c.075 0 .07-.004.07.07v4.624c0 .095.008.084-.085.084c-.37 0-1.11-.002-1.304 0c-.048.001-.06.03-.06.03l-.697 1.519s-.014.025-.008.036s.013.008.058.008q2.622.003 5.243.002c.03-.001.034-.006.035-.033z"/></symbol>
+      <symbol id="p-zhihu" viewBox="0 0 24 24"><path fill="currentColor" d="M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078q-.408 1.096-.68 2.11h4.587c.545-.006.445 1.168.445 1.171H9.384a58 58 0 0 1-.112 3.797h2.712c.388.023.393 1.251.393 1.266H9.183a9.2 9.2 0 0 1-.408 2.102l.757-.604c.452.456 1.512 1.712 1.906 2.177c.473.681.063 2.081.063 2.081l-2.794-3.382c-.653 2.518-1.845 3.607-1.845 3.607c-.523.468-1.58.82-2.64.516c2.218-1.73 3.44-3.917 3.667-6.497H4.491c0-.015.197-1.243.806-1.266h2.71c.024-.32.086-3.254.086-3.797H6.598c-.136.406-.158.447-.268.753c-.594 1.095-1.603 1.122-1.907 1.155c.906-1.821 1.416-3.6 1.591-4.064c.425-1.124 1.671-1.125 1.671-1.125M13.078 6h6.377v11.33h-2.573l-2.184 1.373l-.401-1.373h-1.219z"/></symbol>
+      <symbol id="p-kuaishou" viewBox="0 0 24 24"><path fill="currentColor" d="M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2.32-1.888 4.2-4.218 4.2h-6.202a4.22 4.22 0 0 1-4.023-2.938l-3.676 1.833a2.04 2.04 0 0 1-2.731-.903a2 2 0 0 1-.216-.907v-5.94a2.03 2.03 0 0 1 2.035-2.024a2.04 2.04 0 0 1 .919.218l3.673 1.85a4.22 4.22 0 0 1 4.02-2.925zm-.062 2.162h-6.078c-1.153 0-2.09.921-2.108 2.065v3.247c0 1.148.925 2.081 2.073 2.1h6.113c1.153 0 2.09-.922 2.109-2.065v-3.247a2.104 2.104 0 0 0-2.074-2.1zM4.18 15.72a.554.554 0 0 0-.555.542v3.734a.556.556 0 0 0 .798.496l.01-.004l3.463-1.756V17.51l-3.467-1.73a.56.56 0 0 0-.249-.06M9.28 0a5.67 5.67 0 0 1 4.98 2.965a4.92 4.92 0 0 1 3.36-1.317c2.714 0 4.913 2.177 4.913 4.863s-2.2 4.863-4.912 4.863a4.92 4.92 0 0 1-3.996-2.034a5.65 5.65 0 0 1-4.345 2.034c-3.131 0-5.67-2.546-5.67-5.687S6.149 0 9.28 0m8.34 3.926c-1.441 0-2.61 1.157-2.61 2.585s1.169 2.585 2.61 2.585c1.443 0 2.612-1.157 2.612-2.585s-1.169-2.585-2.611-2.585zM9.28 2.287a3.395 3.395 0 0 0-3.39 3.4c0 1.877 1.518 3.4 3.39 3.4a3.395 3.395 0 0 0 3.39-3.4c0-1.878-1.518-3.4-3.39-3.4"/></symbol>
+      <symbol id="p-wechat" viewBox="0 0 24 24"><path fill="currentColor" d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213c0 .163.13.295.29.295a.33.33 0 0 0 .167-.054l1.903-1.114a.86.86 0 0 1 .717-.098a10.2 10.2 0 0 0 2.837.403c.276 0 .543-.027.811-.05c-.857-2.578.157-4.972 1.932-6.446c1.703-1.415 3.882-1.98 5.853-1.838c-.576-3.583-4.196-6.348-8.596-6.348M5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178a1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18m5.34 2.867c-1.797-.052-3.746.512-5.28 1.786c-1.72 1.428-2.687 3.72-1.78 6.22c.942 2.453 3.666 4.229 6.884 4.229c.826 0 1.622-.12 2.361-.336a.72.72 0 0 1 .598.082l1.584.926a.3.3 0 0 0 .14.047c.134 0 .24-.111.24-.247c0-.06-.023-.12-.038-.177l-.327-1.233a.6.6 0 0 1-.023-.156a.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088z"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="nav" id="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top" aria-label="星采 Stargather 首页">
+        <img class="brand-mark" src="assets/logo-symbol.svg" alt="" width="38" height="38" />
+        <span class="brand-txt"><b>星采</b><span>Stargather</span></span>
+      </a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#pain">为什么需要</a>
+        <a href="#flow">工作流程</a>
+        <a href="#features">核心能力</a>
+        <a href="#ai-access">AI 接入</a>
+        <a href="#private">私有化</a>
+        <a href="#faq">常见问题</a>
+      </nav>
+      <div class="nav-act">
+        <a class="btn sm" href="/demo/">在线演示</a>
+        <a class="btn sm" data-github href="#" rel="noopener">GitHub</a>
+        <a class="btn sm primary" href="#deploy">获取部署</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+      <div class="hero-bar"></div>
+      <div class="wrap hero-grid">
+        <div>
+          <span class="pill" data-hero><i class="pulse"></i>免费 · 私有化部署 · 数据留在自己服务器</span>
+          <h1 data-hero>收藏过的教程，<br />不该消失在<span class="hl">收藏夹</span>里</h1>
+          <p class="hero-lead" data-hero>
+            刷抖音、B站、小红书时收藏的教程、科普和对标视频，过一阵就找不到了。
+            星采把喜欢的博主、收藏和点赞自动归集到本地，下载、转成文字、做 AI 拆解，
+            最后沉淀成一套 <b>真正用得上、能喂给你自己模型</b>的内容知识库。
+          </p>
+          <div class="hero-act" data-hero>
+            <a class="btn primary lg" href="/demo/">在线演示 <span class="ar">→</span></a>
+            <a class="btn lg" href="#deploy">获取私有化部署</a>
+          </div>
+          <div class="plat-row" data-hero>
+            <span class="pr-l">支持平台</span>
+            <span class="plat"><svg><use href="#p-douyin"/></svg>抖音</span>
+            <span class="plat"><svg><use href="#p-bilibili"/></svg>B站</span>
+            <span class="plat"><svg><use href="#p-xhs"/></svg>小红书</span>
+            <span class="plat"><svg><use href="#p-kuaishou"/></svg>快手</span>
+            <span class="plat"><svg><use href="#p-zhihu"/></svg>知乎</span>
+            <span class="plat"><svg><use href="#p-wechat"/></svg>公众号</span>
+          </div>
+        </div>
+
+        <div class="hero-vis" data-hero>
+          <img class="hero-art" src="assets/art/orbit-knowledge.webp" alt="" aria-hidden="true" width="1200" height="686" />
+          <div class="app" role="img" aria-label="星采工作台界面示意：关注列表、自动追更与任务状态">
+            <div class="app-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="app-url">星采 Stargather · 本机部署 127.0.0.1</span>
+            </div>
+            <div class="app-body">
+              <aside class="app-side">
+                <div class="side-i"><span class="sq"></span>总览</div>
+                <div class="side-i"><span class="sq"></span>账号中心</div>
+                <div class="side-i on"><span class="sq"></span>关注列表</div>
+                <div class="side-i"><span class="sq"></span>关键词采集</div>
+                <div class="side-i"><span class="sq"></span>素材库</div>
+                <div class="side-i"><span class="sq"></span>处理队列</div>
+                <div class="side-i"><span class="sq"></span>AI 接入</div>
+              </aside>
+              <div class="app-main">
+                <div class="app-head"><b>关注列表</b><span class="live"><i></i>定时追更中</span></div>
+                <div class="crt">
+                  <span class="av y">影</span>
+                  <div><div class="nm">影视飓风</div><div class="mt">B站 · 已跟踪 · 视频同步已开启</div></div>
+                  <span class="sw on"></span>
+                </div>
+                <div class="crt">
+                  <span class="av b">科</span>
+                  <div><div class="nm">科普研究所</div><div class="mt">抖音 · 每 6 小时检查更新</div></div>
+                  <span class="sw on"></span>
+                </div>
+                <div class="crt">
+                  <span class="av r">藏</span>
+                  <div><div class="nm">我的收藏夹</div><div class="mt">小红书 · 收藏同步已开启</div></div>
+                  <span class="sw on"></span>
+                </div>
+                <div class="crt">
+                  <span class="av g">对</span>
+                  <div><div class="nm">对标账号合集</div><div class="mt">B站 · 等待同步</div></div>
+                  <span class="sw"></span>
+                </div>
+                <div class="app-strip">
+                  <div class="st"><b>128</b><span>已入库素材</span></div>
+                  <div class="st"><b>96</b><span>已完成转录</span></div>
+                  <div class="st"><b>41</b><span>已 AI 分析</span></div>
+                  <div class="st"><b>3</b><span>队列待处理</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PAIN ===================== -->
+    <section id="pain" class="band">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <span class="kick">The problem</span>
+          <h2>我们收藏的内容，<br />大多只被收藏过一次</h2>
+          <p class="sec-sub">信息从来不缺，缺的是留下来、用起来。散在各平台的收藏，最后只是又一个没人翻的抽屉。</p>
+        </div>
+        <div class="pain-grid">
+          <article class="pain rv">
+            <span class="no">01 / 收藏即遗忘</span><span class="ico">✦</span>
+            <h3>收藏夹越来越满，回看率越来越低</h3>
+            <p>刷到有用的视频先点收藏，想着以后再看。平台推荐流一换，连自己收藏过什么都忘了。</p>
+          </article>
+          <article class="pain rv">
+            <span class="no">02 / 平台各自为战</span><span class="ico">◧</span>
+            <h3>账号、关注、收藏散在五六个 App 里</h3>
+            <p>抖音、B站、小红书、快手、知乎、公众号各有各的收藏夹，没有一处能统一查看和管理。</p>
+          </article>
+          <article class="pain rv">
+            <span class="no">03 / 素材用不起来</span><span class="ico">⌘</span>
+            <h3>视频不能搜、不能引用，AI 也吃不到</h3>
+            <p>想做选题、做对标、喂给自己的模型，却只能人工复制标题、听写内容、整理成表格。</p>
+          </article>
+        </div>
+        <div class="art-band rv">
+          <div class="art-frame">
+            <img src="assets/art/scattered-saves.webp" alt="散落流失的收藏卡片与重新归整的素材堆" width="1200" height="686" loading="lazy" />
+            <div class="art-cap"><i></i>散落 → 归整：把流失的收藏重新收拢成可用的素材</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FLOW ===================== -->
+    <section id="flow">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <span class="kick">The pipeline</span>
+          <h2>从「刷到」到「用得上」，<br />一条流水线跑完</h2>
+          <p class="sec-sub">你只需要登录一次平台账号、打开要跟踪的博主或收藏夹，后面的下载、转录、分析和归档交给后台队列。</p>
+        </div>
+        <div class="flow-wrap rv">
+          <div class="flow">
+            <div class="step"><span class="sn">01</span><h3>关注 / 收藏 / 点赞</h3><p>导入你关注的博主，或打开收藏、点赞同步开关。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">02</span><h3>自动追更与采集</h3><p>按小时、天或周检查新内容，也支持关键词采集。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">03</span><h3>下载到本地</h3><p>视频、封面、元数据进入你自己的存储目录。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">04</span><h3>语音转文字</h3><p>本地 faster-whisper 转录，生成可搜索的全文。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">05</span><h3>AI 分析与拆解</h3><p>摘要、标签、内容判类，以及对标账号爆款拆解。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">06</span><h3>本地内容知识库</h3><p>素材、转录、分析一处管理，可筛选、可导出。</p><span class="ar">→</span></div>
+            <div class="step"><span class="sn">07</span><h3>API / MCP</h3><p>让 Claude Code、Codex 或你自己的 Agent 直接调用。</p></div>
+          </div>
+        </div>
+        <div class="art-band rv">
+          <div class="art-frame">
+            <img src="assets/art/pipeline-stages.webp" alt="采集、转录、分析与归档四个处理阶段" width="1200" height="686" loading="lazy" />
+            <div class="art-cap"><i></i>素材卡 → 下载与转录 → 音频/文本 → 结构化分析</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FEATURES ===================== -->
+    <section id="features" class="band">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <span class="kick">Capabilities</span>
+          <h2>不是单点脚本，<br />是一套能长期运行的采集底座</h2>
+          <p class="sec-sub">账号、订阅、采集、下载、转录、分析、导出、开放接口，全部在一个工作台里闭环。</p>
+        </div>
+        <div class="cap-grid">
+          <article class="cap rv"><span class="tg blue">账号中心</span><h3>多平台登录态统一管理</h3><p>B站、抖音、小红书、快手、知乎、公众号，扫码或 Cookie，定时体检掉线。</p><span class="big">01</span></article>
+          <article class="cap rv"><span class="tg red">自动追更</span><h3>喜欢的博主一键跟踪</h3><p>导入关注列表，逐博主控制是否同步其名下视频，新作品自动进入素材库。</p><span class="big">02</span></article>
+          <article class="cap rv"><span class="tg yel">收藏点赞</span><h3>收藏、点赞各自独立同步</h3><p>先导入，再按需打开同步开关。不想同步哪一类就关掉，边界清楚。</p><span class="big">03</span></article>
+          <article class="cap rv"><span class="tg grn">关键词采集</span><h3>按关键词定时发现内容</h3><p>选平台、排序、单次上限和采集周期，支持热度门槛与评论抓取。</p><span class="big">04</span></article>
+          <article class="cap rv"><span class="tg blue">本地下载</span><h3>素材落到自己的硬盘</h3><p>视频和封面下载到本地存储根，按账号、订阅和模板组织目录。</p><span class="big">05</span></article>
+          <article class="cap rv"><span class="tg red">转录</span><h3>本地语音转文字</h3><p>faster-whisper 生成分段与全文，视频从此变成可搜索、可引用的文本。</p><span class="big">06</span></article>
+          <article class="cap rv"><span class="tg yel">AI 分析</span><h3>摘要、标签、内容判类</h3><p>接任意 OpenAI 兼容模型，对转录全文做摘要、标签和自动分型。</p><span class="big">07</span></article>
+          <article class="cap rv"><span class="tg grn">爆款拆解</span><h3>看懂为什么火，怎么复刻</h3><p>结合元数据、转录、视频理解和评论摘要，输出结构化拆解报告。</p><span class="big">08</span></article>
+          <article class="cap rv"><span class="tg blue">素材库</span><h3>筛选、播放、阅读、导出</h3><p>按平台、账号、分类和状态筛选，支持导出 Markdown 与 JSON。</p><span class="big">09</span></article>
+          <article class="cap rv"><span class="tg red">任务队列</span><h3>排队、重试、进度可见</h3><p>下载、转录、分析、采集、评论抓取都有独立状态和失败原因。</p><span class="big">10</span></article>
+          <article class="cap rv"><span class="tg yel">API / MCP</span><h3>让 Agent 直接调用平台能力</h3><p>API Key 带权限范围和限流，MCP 一行配置接进 Claude Code 或 Codex。</p><span class="big">11</span></article>
+          <article class="cap rv"><span class="tg grn">安全</span><h3>凭证加密、响应脱敏</h3><p>AES-256-GCM 加密存储，前端与 API 永远只返回脱敏值。</p><span class="big">12</span></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== KNOWLEDGE / AI ===================== -->
+    <section id="knowledge">
+      <div class="wrap split">
+        <div class="rv">
+          <span class="kick">Built for AI teams</span>
+          <h2>你的模型缺的不是算力，<br />是干净的内容数据</h2>
+          <p class="sec-sub">星采把采集、下载、转录、清洗和结构化这些脏活做完，再通过 API 和 MCP 交给你自己的模型或 Agent。你决定用什么模型、数据存在哪里、哪些内容可以出内网。</p>
+          <ul class="check">
+            <li><span class="ck">✓</span><div><b>全文可检索、可引用</b><span>每条视频都有转录全文、分段、模型名和语言，文章直接存正文。</span></div></li>
+            <li><span class="ck">✓</span><div><b>结构化元数据随内容留存</b><span>平台、作者、发布时间、互动指标、分类和 AI 分析结果都在库里。</span></div></li>
+            <li><span class="ck">✓</span><div><b>接自己的模型，不绑定供应商</b><span>系统设置里填 OpenAI 兼容的 Base URL、模型名和 API Key 即可。</span></div></li>
+            <li><span class="ck">✓</span><div><b>MCP 原生接入</b><span>Claude Code、Codex 或其他 MCP 客户端可直接搜索素材、取转录、触发同步。</span></div></li>
+          </ul>
+        </div>
+        <div class="vis rv">
+          <div class="code">
+            <div class="code-h"><i></i>~/.codex/config.toml</div>
+            <pre><span class="c-dim"># 把星采接进你的 AI 客户端</span>
+<span class="c-b">[mcp_servers.stargather]</span>
+<span class="c-k">command</span> = <span class="c-s">"uv"</span>
+<span class="c-k">args</span> = [<span class="c-s">"run"</span>, <span class="c-s">"python"</span>, <span class="c-s">"-m"</span>, <span class="c-s">"mcp_server.server"</span>]
+<span class="c-k">cwd</span> = <span class="c-s">"/path/to/platform-api"</span>
+
+<span class="c-b">[mcp_servers.stargather.env]</span>
+<span class="c-k">PLATFORM_API_BASE</span> = <span class="c-s">"http://127.0.0.1:9100"</span>
+<span class="c-k">PLATFORM_API_KEY</span>  = <span class="c-s">"sk-你的key"</span></pre>
+          </div>
+        </div>
+      </div>
+      <div class="wrap art-band rv">
+        <div class="art-frame">
+          <img src="assets/art/media-wall-zh.webp" alt="整齐排列的素材卡片与文本分析面板" width="1200" height="686" loading="lazy" />
+          <div class="art-cap"><i></i>每条素材都带着元数据、转录与分析结果，随时可被检索和调用</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AI 接入能力 ===================== -->
+    <section id="ai-access" class="band">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <span class="kick">AI access</span>
+          <h2>AI 接入：把平台能力<br />交给你自己的 Agent</h2>
+          <p class="sec-sub">
+            平台对外只有一套 <code style="font:700 14px/1 var(--mono)">/api/*</code> 接口。
+            网页工作台、MCP、外部 HTTP 客户端走的是同一套能力，没有「只有网页能做」的操作。
+          </p>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-head rv">
+            <h3>三条接入通道，能力完全对等</h3>
+            <p>用 API Key 鉴权，按 scope 控权，每一次调用都落审计日志。</p>
+          </div>
+          <div class="ai-grid">
+            <article class="ai-card rv">
+              <span class="ico">⌘</span>
+              <h4>HTTP API</h4>
+              <p>标准 REST 接口，任何语言都能调。搜索素材、取转录全文、触发同步、跑采集、导出 Markdown / JSON。</p>
+            </article>
+            <article class="ai-card rv">
+              <span class="ico">◈</span>
+              <h4>MCP 原生接入</h4>
+              <p>本地 stdio 进程，一行配置接进 Claude Code / Codex。AI 客户端可以直接把平台当成工具用。</p>
+            </article>
+            <article class="ai-card rv">
+              <span class="ico">▤</span>
+              <h4>与网页同源</h4>
+              <p>网页里能点的，API 也能调。不会出现「这个功能只能手动操作」的黑洞。</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-head rv">
+            <h3>API Key：按用途授权，随时可吊销</h3>
+            <p>给不同的 Agent 发不同的 Key，各管各的权限和限流，出问题只吊销一把。</p>
+          </div>
+          <div class="ai-grid">
+            <article class="ai-card rv">
+              <span class="ico">R</span>
+              <h4>read · 只读</h4>
+              <p>查账号状态、搜素材、读转录、看数据看板、导出内容。适合只做分析的 Agent。</p>
+            </article>
+            <article class="ai-card rv">
+              <span class="ico">W</span>
+              <h4>operate · 可操作</h4>
+              <p>在只读之上，可建采集任务、触发同步、扫码登录、导入文章。适合能自己找素材的 Agent。</p>
+            </article>
+            <article class="ai-card rv">
+              <span class="ico">A</span>
+              <h4>admin · 管理</h4>
+              <p>额外可改系统设置。默认不建议给常驻 Agent，留给运维账号。</p>
+            </article>
+          </div>
+          <div class="tool-row rv">
+            <span class="tool"><i></i><code>list_accounts</code> 账号列表</span>
+            <span class="tool"><i></i><code>check_account</code> 账号体检</span>
+            <span class="tool"><i></i><code>search_assets</code> 搜索素材</span>
+            <span class="tool"><i></i><code>get_transcript</code> 取转录</span>
+            <span class="tool"><i></i><code>list_followed_creators</code> 关注博主</span>
+            <span class="tool"><i></i><code>get_analytics</code> 数据看板</span>
+            <span class="tool"><i></i><code>export_assets</code> 导出内容</span>
+            <span class="tool op"><i></i><code>create_crawl_task</code> 建采集任务</span>
+            <span class="tool op"><i></i><code>trigger_sync</code> 触发同步</span>
+            <span class="tool op"><i></i><code>start_qr_login</code> 扫码登录</span>
+            <span class="tool op"><i></i><code>poll_qr_login</code> 轮询登录</span>
+            <span class="tool op"><i></i><code>update_cookie</code> 更新凭证</span>
+            <span class="tool op"><i></i><code>import_article</code> 导入文章</span>
+            <span class="tool op"><i></i><code>list_crawl_tasks</code> 采集任务</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PRIVATE ===================== -->
+    <section id="private" class="band">
+      <div class="wrap split rev">
+        <div class="vis rv">
+          <div class="board">
+            <div class="brow"><div class="bk">部署方式</div><div class="bv"><b>用户私有化部署。</b>不提供统一线上服务，没有共享的云端账号体系。</div></div>
+            <div class="brow"><div class="bk">数据位置</div><div class="bv">素材文件、封面、转录、分析结果全部存在<b>你自己的存储根</b>和数据库里。</div></div>
+            <div class="brow"><div class="bk">凭证安全</div><div class="bv">Cookie / Token 使用 <b>AES-256-GCM</b> 加密入库，密钥不进数据库、不进 git。</div></div>
+            <div class="brow"><div class="bk">运行形态</div><div class="bv">Docker Compose 单机部署；任务队列用 PostgreSQL 表实现，不需要 Redis 或 Celery。</div></div>
+            <div class="brow"><div class="bk">模型选择</div><div class="bv">接任意 OpenAI 兼容接口，也可以完全离线运行本地模型，平台不锁定供应商。</div></div>
+          </div>
+          <div class="art-frame" style="margin-top:26px">
+            <img src="assets/art/local-server.webp" alt="私有化部署：服务器、加密锁与本地归档" width="1200" height="686" loading="lazy" />
+            <div class="art-cap"><i></i>自带服务器 · 自带数据库 · 自带存储</div>
+          </div>
+        </div>
+        <div class="rv">
+          <span class="kick">Private by default</span>
+          <h2>只在你的服务器上运行，<br />不经过我们的云</h2>
+          <p class="sec-sub">星采不是一个要你注册账号的 SaaS。它交付的是一套可以自己部署、自己掌控的软件：数据库在你这里，素材在你这里，平台凭证也在你这里。</p>
+          <ul class="check">
+            <li><span class="ck">✓</span><div><b>没有统一服务端</b><span>我们不需要、也不会收到你的账号凭证或采集数据。</span></div></li>
+            <li><span class="ck">✓</span><div><b>内网 / 断网也能跑</b><span>采集、下载、转录和素材库都可在本地网络内运行；模型可选本地或云端。</span></div></li>
+            <li><span class="ck">✓</span><div><b>单管理员模式</b><span>没有复杂的多租户和角色体系，一台机器、一个人管理，简单可控。</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section id="faq">
+      <div class="wrap">
+        <div class="sec-head rv">
+          <span class="kick">FAQ</span>
+          <h2>部署之前，<br />你可能想知道</h2>
+        </div>
+        <div class="faq rv">
+          <details open>
+            <summary>星采是 SaaS 吗？</summary>
+            <p>不是。星采只提供私有化部署，不提供统一线上服务，也不需要注册。你可以先<a href="/demo/">打开在线演示</a>看看完整界面与数据形态，再把它部署到自己的电脑、服务器或内网环境里。</p>
+          </details>
+          <details>
+            <summary>产品收费吗？</summary>
+            <p>产品免费。采集、下载、转录、素材库、API / MCP 这些能力都在你部署的实例里运行。AI 分析需要模型，你可以接自己的 OpenAI 兼容接口，也可以使用本地模型。</p>
+          </details>
+          <details>
+            <summary>需要什么运行环境？</summary>
+            <p>支持 Linux、macOS、Windows 单机部署。首选 Docker Compose，数据库使用 PostgreSQL；开发时 SQLite 也可以作为本地简化方案。预处理视频需要 ffmpeg，本地转录需要 faster-whisper 模型。</p>
+          </details>
+          <details>
+            <summary>它怎么拿到我的收藏和关注？</summary>
+            <p>登录你自己的平台账号后，星采会通过平台的原生接口或浏览器流程读取你的关注列表、收藏夹和作品数据。凭证使用 AES-256-GCM 加密存储，接口和前端只返回脱敏值。</p>
+          </details>
+          <details>
+            <summary>可以只采集关键词，不导入账号吗？</summary>
+            <p>关键词采集同样需要对应平台的登录态，因为平台接口要求已登录。你可以创建一个专用账号，只在星采里用于采集，避免影响主账号。</p>
+          </details>
+          <details>
+            <summary>评论会全部抓吗？</summary>
+            <p>不会。默认只有达到热度门槛的作品才触发评论抓取，抓取页数、条数和频率都可以配置，避免对平台造成不必要的压力。</p>
+          </details>
+          <details>
+            <summary>能把素材喂给我自己的 Agent 吗？</summary>
+            <p>可以。在「AI 接入」页创建带权限范围的 API Key，然后通过 HTTP API 或 MCP 调用。常用能力包括搜索素材、获取转录全文、触发同步、运行采集和导出。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 联系我们（微信） ===================== -->
+    <section id="contact" class="wx-band">
+      <div class="wrap wx-grid">
+        <div class="rv">
+          <span class="kick">Community</span>
+          <h2>加入星采交流群，<br />一起把它用起来</h2>
+          <p class="sec-sub">
+            星采是免费、可私有化部署的项目。部署卡住了、想聊聊自己的采集场景、
+            或者看看别人怎么用——都可以进群。产品免费，群里也没有推销。
+          </p>
+          <ul class="wx-steps">
+            <li><span class="n">1</span><div><b>扫码加我微信，备注「星采」</b><span>加好友时写一下备注，我会拉你进交流群。</span></div></li>
+            <li><span class="n">2</span><div><b>进群聊部署和使用</b><span>平台账号接入、模型配置、内网部署这些问题，群里一起讨论。</span></div></li>
+            <li><span class="n">3</span><div><b>拿到部署包和文档</b><span>GitHub 自助获取，群里也会同步更新说明。</span></div></li>
+          </ul>
+          <p class="wx-note">群内不欢迎广告与无关推广，只聊星采和内容采集相关的事。</p>
+        </div>
+        <div class="wx-card rv">
+          <div class="qr-wrap">
+            <img src="assets/wechat-qr.webp" alt="星采 Stargather 交流群微信二维码" width="720" height="720" loading="lazy" />
+          </div>
+          <p class="who">ai联众-王（xsai5.xyz）</p>
+          <p class="what">扫码加我 · 备注「星采」拉你进交流群</p>
+          <!-- 引导语按环境切换：微信内才支持长按识别，普通浏览器长按只会「保存图片」 -->
+          <span class="scan-hint" data-hint="wechat">长按二维码，点<b>「识别图中二维码」</b></span>
+          <span class="scan-hint" data-hint="mobile">长按保存二维码，再到微信<b>「扫一扫 → 相册」</b>里选它</span>
+          <span class="scan-hint" data-hint="desktop">请打开手机微信，用<b>「扫一扫」</b>扫描屏幕上的二维码</span>
+          <div class="fallback">
+            <b>扫不出来？</b>
+            截图或长按保存这张二维码，打开微信 <kbd>+</kbd> → <kbd>扫一扫</kbd> → <kbd>相册</kbd>，选中这张图即可识别。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CTA ===================== -->
+    <section id="deploy" class="cta">
+      <div class="wrap cta-grid">
+        <div class="rv">
+          <span class="kick">Get started</span>
+          <h2>把它部署到<br />你的服务器上</h2>
+          <p class="sec-sub">产品免费、可私有化部署。你可以先从 GitHub 了解项目，也可以直接联系我们沟通部署环境与平台账号接入。</p>
+          <div class="cta-act">
+            <a class="btn primary lg" href="/demo/">先在线体验 <span class="ar">→</span></a>
+            <a class="btn lg" data-github href="#" rel="noopener">前往 GitHub 获取</a>
+          </div>
+        </div>
+        <div class="contact rv" id="contact-info">
+          <h3>联系与交流</h3>
+          <p>加我微信并备注「星采」，我会拉你进交流群。</p>
+          <div class="cline"><span>GitHub</span><b><a data-github href="#" rel="noopener">github.com/lianying1716/platform-api</a></b></div>
+          <div class="cline"><span>微信群</span><b><a href="#contact">加我微信 · 备注「星采」拉你进群</a></b></div>
+          <div class="cline" data-row="email" hidden><span>邮箱</span><b><a data-slot="email" href="#"></a></b></div>
+          <div class="cline"><span>部署方式</span><b>私有化部署 · 单机 / 内网</b></div>
+          <p class="note">加好友时备注「星采」，方便我第一时间拉你进群。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb"><img src="assets/logo-symbol-dark.svg" alt="" width="30" height="30" />星采 Stargather</span>
+      <p>私有化内容采集与 AI 分析平台</p>
+      <nav class="fl" aria-label="页脚">
+        <a href="/demo/">在线演示</a>
+        <a data-github href="#" rel="noopener">GitHub</a>
+        <a data-nexai href="#" rel="noopener" hidden>星算</a>
+        <a href="#contact">加入交流群</a>
+        <a href="#private">私有化</a>
+        <a href="#faq">常见问题</a>
+        <a href="#deploy">获取部署</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script src="assets/vendor/ScrollTrigger.min.js"></script>
+  <script>
+    // ---------------------------------------------------------------------
+    // 站点配置：上线前只需要改这里
+    // 1) GitHub 仓库公开后，把 github 换成仓库地址；
+    // 2) 填入真实微信 / 邮箱后，联系方式一行会自动出现（不填则不展示空占位）；
+    // 3) 星算跳转地址填上后，页脚会自动显示「星算」链接。
+    // ---------------------------------------------------------------------
+    const SITE = {
+      github: 'https://github.com/lianying1716/platform-api',
+      email: '',
+      nexai: '',
+    }
+
+    // ---------------------------------------------------------------------
+    // 微信二维码引导：按访客所在环境给不同说法。
+    // 三种环境的长按行为差别很大，用同一句「长按识别」会误导：
+    //   - 微信内置浏览器：长按会弹出「识别图中二维码」——这是唯一支持长按识别的环境
+    //   - 其他手机浏览器（Safari / Chrome）：长按通常只有「保存图片」
+    //   - 电脑：屏幕上没法扫，只能用手机扫
+    // ---------------------------------------------------------------------
+    ;(function detectEnv() {
+      const ua = navigator.userAgent || ''
+      const inWechat = /MicroMessenger/i.test(ua)
+      const isMobile = /Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)
+        || (navigator.maxTouchPoints > 1 && window.matchMedia('(pointer: coarse)').matches)
+      document.body.classList.add(inWechat ? 'env-wechat' : isMobile ? 'env-mobile' : 'env-desktop')
+    })()
+
+    document.querySelectorAll('[data-github]').forEach((el) => {
+      el.setAttribute('href', SITE.github)
+      el.setAttribute('target', '_blank')
+      el.setAttribute('rel', 'noopener noreferrer')
+    })
+
+    document.querySelectorAll('[data-contact]').forEach((el) => {
+      el.setAttribute('href', SITE.email ? 'mailto:' + SITE.email : '#contact-info')
+    })
+
+    if (SITE.email) {
+      const r = document.querySelector('[data-row="email"]')
+      const s = document.querySelector('[data-slot="email"]')
+      if (r && s) { r.hidden = false; s.textContent = SITE.email; s.setAttribute('href', 'mailto:' + SITE.email) }
+    }
+    if (SITE.nexai) {
+      document.querySelectorAll('[data-nexai]').forEach((el) => {
+        el.hidden = false
+        el.setAttribute('href', SITE.nexai)
+        el.setAttribute('target', '_blank')
+        el.setAttribute('rel', 'noopener noreferrer')
+      })
+    }
+
+    // ---------------------------------------------------------------------
+    // Motion: GSAP + ScrollTrigger
+    // ---------------------------------------------------------------------
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const hasGsap = typeof gsap !== 'undefined'
+
+    if (hasGsap && !reduce) {
+      document.documentElement.classList.add('js')
+      gsap.registerPlugin(ScrollTrigger)
+
+      // 导航在滚动后落一条实线
+      ScrollTrigger.create({
+        start: 'top -8',
+        onUpdate: (self) => {
+          document.getElementById('nav').classList.toggle('solid', self.progress > 0 || window.scrollY > 8)
+        },
+        onToggle: (self) => document.getElementById('nav').classList.toggle('solid', self.isActive),
+      })
+      const nav = document.getElementById('nav')
+      const onScroll = () => nav.classList.toggle('solid', window.scrollY > 8)
+      window.addEventListener('scroll', onScroll, { passive: true })
+      onScroll()
+
+      // 首屏：分层次进场
+      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      heroTl
+        .from('.pill[data-hero]', { y: 18, opacity: 0, duration: .55 })
+        .from('h1[data-hero]', { y: 30, opacity: 0, duration: .75 }, '-=.3')
+        .from('.hero-lead[data-hero]', { y: 22, opacity: 0, duration: .6 }, '-=.45')
+        .from('.hero-act[data-hero]', { y: 18, opacity: 0, duration: .5 }, '-=.38')
+        .from('.plat-row[data-hero] .plat', { y: 12, opacity: 0, duration: .4, stagger: .06 }, '-=.3')
+        .from('.hero-vis[data-hero]', { x: 44, opacity: 0, duration: .9 }, '-=.85')
+        .from('.app .crt', { x: 20, opacity: 0, duration: .45, stagger: .09 }, '-=.5')
+        .from('.app .st', { y: 12, opacity: 0, duration: .35, stagger: .06 }, '-=.32')
+        .from('.hero-art', { scale: .92, opacity: 0, duration: 1.2, transformOrigin: '70% 40%' }, '-=1.1')
+
+      // 背景插画随滚动缓慢漂移，制造纵深
+      gsap.to('.hero-art', {
+        yPercent: -8, ease: 'none',
+        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: .6 },
+      })
+
+      // 通用揭示
+      gsap.utils.toArray('.rv').forEach((el) => {
+        const kids = el.matches('.pain-grid, .cap-grid, .faq')
+          ? Array.from(el.children)
+          : null
+        if (kids) {
+          gsap.set(el, { opacity: 1, y: 0 })
+          gsap.set(kids, { opacity: 0, y: 26 })
+          ScrollTrigger.create({
+            trigger: el, start: 'top 82%', once: true,
+            onEnter: () => gsap.to(kids, { opacity: 1, y: 0, duration: .6, stagger: .09, ease: 'power2.out' }),
+          })
+        } else {
+          gsap.set(el, { opacity: 0, y: 30 })
+          ScrollTrigger.create({
+            trigger: el, start: 'top 84%', once: true,
+            onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: .7, ease: 'power2.out' }),
+          })
+        }
+      })
+
+      // 流程条：逐个点亮
+      gsap.from('.step', {
+        opacity: 0, y: 22, duration: .5, stagger: .08, ease: 'power2.out',
+        scrollTrigger: { trigger: '.flow-wrap', start: 'top 78%', once: true },
+      })
+
+      // 数字轻微呼吸，暗示「实时」
+      gsap.to('.live i', { opacity: .25, duration: .9, repeat: -1, yoyo: true, ease: 'sine.inOut' })
+
+      // 视差：插画框随滚动微移
+      gsap.utils.toArray('.art-frame img').forEach((img) => {
+        gsap.fromTo(img, { yPercent: -3 }, {
+          yPercent: 3, ease: 'none',
+          scrollTrigger: { trigger: img.closest('.art-frame'), start: 'top bottom', end: 'bottom top', scrub: .8 },
+        })
+      })
+
+      // 锚点滚动交给 CSS smooth，这里只在点击后收起打开的 FAQ 之外的抖动收敛
+      window.addEventListener('load', () => ScrollTrigger.refresh())
+    } else {
+      document.querySelectorAll('.rv').forEach((el) => { el.style.opacity = 1 })
+    }
+  </script>
+</body>
+</html>

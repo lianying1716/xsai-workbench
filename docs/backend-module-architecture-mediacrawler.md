@@ -10,7 +10,7 @@
 
 ## 1. 文档目标
 
-本文档基于对 `/www/wwwroot/xsai-workbench/MediaCrawler` 的源码审查，整理其现有能力、运行流程、平台模块、数据存储、登录、代理、WebUI/API、测试与合规风险，并定义其并入统一平台时的后端模块设计和前端配置页面清单。
+本文档基于对 `/path/to/xsai-workbench/MediaCrawler` 的源码审查，整理其现有能力、运行流程、平台模块、数据存储、登录、代理、WebUI/API、测试与合规风险，并定义其并入统一平台时的后端模块设计和前端配置页面清单。
 
 本文档只覆盖 `MediaCrawler`。抖音账号收藏/关注同步仍以 `dysync.net` 拆解结果为主，B 站账号收藏夹/UP 主投稿同步仍以 `bili-sync` 拆解结果为主。`MediaCrawler` 在统一平台中的主定位是“多平台关键词、详情、创作者公开内容抓取模块”。
 

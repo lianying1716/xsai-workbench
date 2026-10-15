@@ -751,7 +751,7 @@ git commit -m "feat: add article import dialog to assets page"
 
 - [ ] **Step 6: 校验**
 
-Run: `cd /www/wwwroot/xsai-workbench && grep -n "P6" docs/development-master-plan.md | head`
+Run: `cd /path/to/xsai-workbench && grep -n "P6" docs/development-master-plan.md | head`
 Expected: 能看到修改后的 P6 行（含"单篇 URL 导入"）。
 
 - [ ] **Step 7: 提交**
@@ -760,7 +760,7 @@ Expected: 能看到修改后的 P6 行（含"单篇 URL 导入"）。
 
 ```bash
 cd platform-api && git add README.md && git commit -m "docs: record WeChat article capability boundary"
-cd /www/wwwroot/xsai-workbench/wechat-article-exporter && git add README.md && git commit -m "docs: note upstream shutdown snapshot"
+cd /path/to/xsai-workbench/wechat-article-exporter && git add README.md && git commit -m "docs: note upstream shutdown snapshot"
 ```
 
 ---

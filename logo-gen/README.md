@@ -50,7 +50,7 @@ python3 logo-gen/build_frontend_brand.py # 生成前端 web/public 品牌文件�
 `platform-api/docs/brand/logo/README.md`。
 
 > **探索脚本含绝对路径**：`run*.py` / `prompts*.py` / `gallery*.py` / `judge*.py` / `see.py` /
-> `scratch/` / `trace*.py` 是当时一次性运行的探索脚本，里面保留了 `/www/wwwroot/...` 绝对路径。
+> `scratch/` / `trace*.py` 是当时一次性运行的探索脚本，其中的绝对路径已脱敏。
 > 它们只作历史留痕，**不要直接复用**；需要重跑时请自行把路径改成本机路径。
 > 真正需要长期维护的只有上面「正式交付管线」里的 `orbit_*.py`（已改为相对路径）。
 

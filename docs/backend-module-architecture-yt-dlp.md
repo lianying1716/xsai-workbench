@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文档基于对 `/www/wwwroot/xsai-workbench/yt-dlp` 的源码审查，整理其现有能力、运行流程、核心模块、下载与后处理机制、Cookie/代理/网络能力、测试、打包、许可与安全风险，并定义其并入统一平台时的后端模块设计、数据模型、统一 API、前端配置页面和实施路线。
+本文档基于对 `/path/to/xsai-workbench/yt-dlp` 的源码审查，整理其现有能力、运行流程、核心模块、下载与后处理机制、Cookie/代理/网络能力、测试、打包、许可与安全风险，并定义其并入统一平台时的后端模块设计、数据模型、统一 API、前端配置页面和实施路线。
 
 本文档只覆盖 `yt-dlp`。它在统一平台中的定位是“通用媒体 URL 解析与下载模块”，用于处理任意公开视频/音频 URL、非重点平台的下载、微信文章内嵌媒体下载、专用平台模块失败时的兜底下载，以及未来外部 skill 的通用媒体下载能力。
 
@@ -20,7 +20,7 @@
 本地审查信息：
 
 ```text
-路径: /www/wwwroot/xsai-workbench/yt-dlp
+路径: /path/to/xsai-workbench/yt-dlp
 远端: https://github.com/yt-dlp/yt-dlp
 当前本地提交: 5faffa999
 version.py RELEASE_GIT_HEAD: 04d6974f502bbdfaed72c624344f262e30ad9708

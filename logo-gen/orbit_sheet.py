@@ -1,6 +1,6 @@
 """生成「轨道」几何变体对比表，用视觉模型评审。"""
 import math, os, sys
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/logo-gen")
+sys.path.insert(0, "/path/to/xsai-workbench/logo-gen")
 from PIL import Image, ImageDraw
 import cairosvg
 

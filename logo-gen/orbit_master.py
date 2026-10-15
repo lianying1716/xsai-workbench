@@ -139,5 +139,5 @@ def write_all(root):
 
 if __name__ == "__main__":
     import sys
-    root = sys.argv[1] if len(sys.argv) > 1 else "/www/wwwroot/xsai-workbench/logo-gen/orbit"
+    root = sys.argv[1] if len(sys.argv) > 1 else "/path/to/xsai-workbench/logo-gen/orbit"
     print("wrote", root, write_all(root))

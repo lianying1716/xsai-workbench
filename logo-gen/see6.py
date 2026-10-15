@@ -1,5 +1,5 @@
 import os, sys
-sys.path.insert(0, "/www/wwwroot/xsai-workbench/platform-api/docs/brand/logo/tools")
+sys.path.insert(0, "/path/to/platform-api/docs/brand/logo/tools")
 from see import ask
 Q = """你是资深品牌设计总监。评审这张 logo 概念图，用于产品「星采 Stargather」
 （中文自媒体创作者的自动化素材采集与管理加工工具）。标准：简洁、几何、包豪斯硬边、

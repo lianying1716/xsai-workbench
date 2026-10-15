@@ -3,7 +3,7 @@
 再用 potrace 描摹成干净 SVG。
 星算的 images/generations 支持 image 字段（图生图）；这里直接把参考图以 base64 传入。"""
 import base64,json,os,subprocess,sys,tempfile
-KEY=open("/tmp/xk").read().strip()
+KEY=open("/path/to/api-key").read().strip()
 API="https://api.xsai5.xyz/v1/images/generations"
 
 PROMPT=("Redraw this logo as a clean FLAT vector design. Keep the exact same composition, shapes, "
